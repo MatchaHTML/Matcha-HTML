@@ -111,6 +111,14 @@ nav button.on{background:var(--navy);color:var(--yellow)}
 .loading .pbar i{animation:blink 1.2s infinite}
 .loading .pbar i:nth-child(2){animation-delay:.1s}.loading .pbar i:nth-child(3){animation-delay:.2s}.loading .pbar i:nth-child(4){animation-delay:.3s}.loading .pbar i:nth-child(5){animation-delay:.4s}.loading .pbar i:nth-child(6){animation-delay:.5s}.loading .pbar i:nth-child(7){animation-delay:.6s}.loading .pbar i:nth-child(8){animation-delay:.7s}
 @keyframes blink{0%,100%{background:transparent}50%{background:var(--green)}}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:2px solid var(--cream);background:transparent;padding:7px 12px;font-size:14px;cursor:pointer}
+.chips button:active{background:var(--cream);color:var(--navy)}
+.erow{background:var(--navy2);border:3px solid rgba(255,244,220,.25);padding:10px;margin-top:8px}
+.erow .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.erow .cat{font-weight:600;color:var(--yellow)}
+.erow .x{background:none;border:none;color:var(--cream);opacity:.6;font-family:var(--px);font-size:11px;cursor:pointer}
+.erow .row input{padding:8px 10px}
 .hint{font-size:13px;background:rgba(245,184,46,.12);border-left:4px solid var(--yellow);padding:10px 12px;margin:8px 0}
 </style>
 </head>
@@ -186,11 +194,14 @@ nav button.on{background:var(--navy);color:var(--yellow)}
     </div>
     <h2>expense</h2>
     <div class="row"><div><label>วันที่</label><input type="date" id="eDate"></div>
-      <div><label>จำนวนเงิน (บาท)</label><input type="number" inputmode="decimal" id="eAmt" placeholder="0"></div></div>
+      <div><label>ร้านที่ซื้อ</label><input id="eNote" placeholder="เช่น Makro"></div></div>
     <label>ใครออกเงิน</label>
     <div class="seg ownSeg" id="eOwner"></div>
-    <label>หมวด</label><select id="eCat"></select>
-    <label>ร้าน / รายละเอียด</label><input id="eNote" placeholder="เช่น ผง Yame 100 g">
+    <label>เลือกรายการ (กดได้หลายอย่าง)</label>
+    <div class="chips" id="eChips"></div>
+    <div id="eRows"></div>
+    <button class="btn ghost" id="eAddRow" style="margin-top:8px">+ ADD ITEM</button>
+    <div class="total"><span>TOTAL</span><b id="eTotal">฿0</b></div>
     <input type="hidden" id="eReceipt">
     <button class="btn" id="eSave">SAVE EXPENSE &gt;</button>
   </section>
@@ -435,7 +446,20 @@ $('#sSave').onclick=async()=>{
 };
 
 /* ===== SPEND + SCAN ===== */
-$('#eCat').innerHTML=CATS.map(c=>'<option>'+c+'</option>').join('');
+let eRows=[];
+$('#eChips').innerHTML=CATS.map(c=>'<button data-c="'+c+'">'+c+'</button>').join('');
+$$('#eChips button').forEach(b=>b.onclick=()=>{eRows.push({cat:b.dataset.c,detail:'',amount:''});renderERows(true)});
+$('#eAddRow').onclick=()=>{eRows.push({cat:'อื่นๆ',detail:'',amount:''});renderERows(true)};
+function renderERows(focusLast){
+  $('#eRows').innerHTML=eRows.map((r,i)=>'<div class="erow"><div class="top"><select data-i="'+i+'" data-k="cat" style="width:auto;padding:4px 8px;font-size:14px">'+CATS.map(c=>'<option'+(c===r.cat?' selected':'')+'>'+c+'</option>').join('')+'</select><button class="x" data-rm="'+i+'">✕</button></div>'+
+    '<div class="row"><input style="flex:2" data-i="'+i+'" data-k="detail" value="'+esc(r.detail)+'" placeholder="'+(r.cat==='อื่นๆ'?'ระบุว่าเป็นค่าอะไร *':'รายละเอียด (ไม่ใส่ก็ได้)')+'"><input style="flex:1" type="number" inputmode="decimal" data-i="'+i+'" data-k="amount" value="'+(r.amount===''?'':r.amount)+'" placeholder="บาท"></div></div>').join('');
+  $$('#eRows [data-k]').forEach(el=>{el.oninput=()=>{eRows[el.dataset.i][el.dataset.k]=el.value;eTotal()};
+    if(el.tagName==='SELECT')el.onchange=()=>{eRows[el.dataset.i].cat=el.value;renderERows()}});
+  $$('#eRows [data-rm]').forEach(b=>b.onclick=()=>{eRows.splice(+b.dataset.rm,1);renderERows()});
+  eTotal();
+  if(focusLast){const a=$$('#eRows [data-k=amount]');if(a.length){const el=eRows[eRows.length-1].cat==='อื่นๆ'?$$('#eRows [data-k=detail]').pop():a.pop();el&&el.focus()}}
+}
+function eTotal(){$('#eTotal').textContent=fmt(sum(eRows,r=>+r.amount||0))}
 $('#eDate').value=TODAY();
 setTimeout(()=>ownSeg($('#eOwner'),eOwn,v=>eOwn=v,true));
 $('#scanBox').onclick=()=>$('#scanFile').click();
@@ -447,9 +471,12 @@ $('#scanFile').onchange=async e=>{
     loading(true,'AI READING RECEIPT...');
     const r=await call('scanReceipt',{image:b64,mime:'image/jpeg'});
     if(r.date)$('#eDate').value=r.date;
-    if(r.total)$('#eAmt').value=r.total;
-    if(r.category&&CATS.includes(r.category))$('#eCat').value=r.category;
-    $('#eNote').value=[r.store,(r.items||[]).slice(0,3).map(x=>x.name).join(', ')].filter(Boolean).join(' · ');
+    const its=(r.items||[]).filter(x=>+x.price>0);
+    eRows=its.length?its.map(x=>({cat:CATS.includes(x.category)?x.category:(CATS.includes(r.category)?r.category:'อื่นๆ'),detail:(x.name||'')+(x.qty>1?' ×'+x.qty:''),amount:+x.price})):[{cat:CATS.includes(r.category)?r.category:'อื่นๆ',detail:'',amount:+r.total||''}];
+    const diff=(+r.total||0)-sum(eRows,x=>+x.amount||0);
+    if(its.length&&r.total&&diff>0.5)eRows.push({cat:'อื่นๆ',detail:'ส่วนต่าง (VAT/ค่าบริการ)',amount:Math.round(diff*100)/100});
+    renderERows();
+    $('#eNote').value=r.store||'';
     $('#eReceipt').value=r.receiptUrl||'';
     $('#srStore').textContent=(r.store||'ใบเสร็จ')+(r.date?' · '+thDate(r.date):'');
     $('#srItems').innerHTML=(r.items||[]).map(x=>'<div><span>'+esc(x.name)+(x.qty>1?' ×'+x.qty:'')+'</span><span>'+fmt2(+x.price||0)+'</span></div>').join('')+'<div style="font-weight:600"><span>รวม</span><span>'+fmt2(+r.total||0)+'</span></div>';
@@ -461,12 +488,17 @@ function shrink(file,max,q){return new Promise((res,rej)=>{const img=new Image()
   const c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
   const url=c.toDataURL('image/jpeg',q);res({url,b64:url.split(',')[1]})};img.onerror=()=>rej(new Error('เปิดรูปไม่ได้'));img.src=URL.createObjectURL(file)})}
 $('#eSave').onclick=async()=>{
-  const amt=+$('#eAmt').value; if(!(amt>0))return toast('ใส่จำนวนเงินก่อนนะคะ');
-  const tx={date:$('#eDate').value||TODAY(),type:'expense',category:$('#eCat').value,menu:'',qty:0,amount:amt,payment:'',note:$('#eNote').value,receiptUrl:$('#eReceipt').value,owner:(S.owners[eOwn]||{name:'บัญชีร้าน'}).name};
-  loading(true,'SAVING...');
-  try{const r=await call('add',{tx});TX.push(Object.assign({id:r.id},tx));
-    $('#eAmt').value='';$('#eNote').value='';$('#eReceipt').value='';$('#scanResult').style.display='none';$('#scanImg').style.display='none';
-    toast('บันทึกรายจ่ายแล้ว ✓');
+  const rows=eRows;
+  if(!rows.length)return toast('เพิ่มรายการก่อนนะคะ');
+  if(rows.some(r=>!(+r.amount>0)))return toast('ยังไม่ได้ใส่ราคา '+rows.filter(r=>!(+r.amount>0)).length+' รายการ');
+  if(rows.some(r=>r.cat==='อื่นๆ'&&!String(r.detail).trim()))return toast('รายการ "อื่นๆ" กรุณาระบุว่าเป็นค่าอะไร');
+  const base={date:$('#eDate').value||TODAY(),type:'expense',menu:'',qty:0,payment:'',receiptUrl:$('#eReceipt').value,owner:(S.owners[eOwn]||{name:'บัญชีร้าน'}).name};
+  const shop=$('#eNote').value.trim();
+  loading(true,'SAVING '+rows.length+' ITEM'+(rows.length>1?'S':'')+'...');
+  try{for(const r of rows){const tx=Object.assign({},base,{category:r.cat,amount:+r.amount,note:[r.detail,shop].filter(Boolean).join(' · ')});
+      const res=await call('add',{tx});TX.push(Object.assign({id:res.id},tx));}
+    eRows=[];renderERows();$('#eNote').value='';$('#eReceipt').value='';$('#scanResult').style.display='none';$('#scanImg').style.display='none';
+    toast('บันทึกรายจ่าย '+rows.length+' รายการแล้ว ✓');
   }catch(e){toast('บันทึกไม่ได้: '+e.message)}finally{loading(false)}
 };
 
