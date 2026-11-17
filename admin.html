@@ -139,7 +139,7 @@ const LS={get(k,d){try{const v=localStorage.getItem('mha_'+k);return v==null?d:v
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hm=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 const LBL={new:'NEW',accepted:'MAKING',ready:'READY',done:'DONE',cancel:'CANCELLED'};
-let user=LS.get('user',''), pin=LS.get('pin',''), tab='new', SHOP=null, orders=[], known=null, busy=false;
+let prevSt={}, user=LS.get('user',''), pin=LS.get('pin',''), tab='new', SHOP=null, orders=[], known=null, busy=false;
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
 async function api(action,p={}){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,user,pass:pin},p))});const j=await r.json();if(!j.ok)throw new Error(j.error);return j.data}
 $('#loginBtn').onclick=async()=>{user=$('#uid').value.trim();pin=$('#pin').value;
@@ -155,6 +155,9 @@ async function load(){
     const ids=new Set(orders.filter(o=>o.status==='new').map(o=>o.no));
     if(known&&[...ids].some(i=>!known.has(i))){beep();toast('🔔 มีออเดอร์ใหม่!');document.title='🔔 NEW ORDER';setTimeout(()=>document.title='MATCHA.HTML — admin',4000)}
     known=new Set([...(known||[]),...ids]);
+    const cx=orders.filter(o=>o.status==='cancel'&&prevSt[o.no]&&prevSt[o.no]!=='cancel'&&o.by==='ลูกค้า');
+    if(cx.length){beep();toast('❌ ลูกค้ายกเลิก #'+cx.map(o=>o.no+' ('+o.name+')').join(', '))}
+    prevSt={};orders.forEach(o=>prevSt[o.no]=o.status);
     render();$('#upd').textContent='> updated '+hm(Date.now())+' · auto refresh 10s';
   }catch(e){$('#upd').textContent='> error: '+e.message}
 }

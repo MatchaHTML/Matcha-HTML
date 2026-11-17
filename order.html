@@ -162,6 +162,7 @@ input.name:focus{border-color:var(--yellow)}
     <div class="who" id="doneNo"></div>
     <img id="slipImg" alt="order">
     <div class="hint">กดค้างที่รูปเพื่อบันทึก หรือกดปุ่มด้านล่าง</div>
+    <div class="hint" style="margin-top:6px">ยกเลิกได้ที่หน้า "ดูสถานะออเดอร์" ก่อนร้านกดรับออเดอร์</div>
     <button class="go" id="saveImg">SAVE IMAGE ⬇</button>
     <a class="go green" id="statusLink" style="text-align:center;text-decoration:none">ดูสถานะออเดอร์ &gt;</a>
     <button class="go ghost" id="newOrder">NEW ORDER</button>
@@ -278,18 +279,18 @@ function dash(g,y){g.fillStyle='rgba(255,244,220,.35)';for(let x=32;x<688;x+=24)
 
 $('#confirm').onclick=async()=>{
   if(!cart.length)return;
-  const d=new Date(), no=orderNo(), when=thTime(d), text=summaryText(no,when);
+  const d=new Date(), no=orderNo(), when=thTime(d), text=summaryText(no,when), key=Math.random().toString(36).slice(2)+Date.now().toString(36);
   $('#loading').style.display='flex';
   try{
     const img=await drawImage(no,when); lastImg=img; lastNo=no;
     $('#slipImg').src=img;$('#doneNo').textContent='เลขออเดอร์ #'+no+' · ยอด ฿'+total();
     if(API){
       const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},
-        body:JSON.stringify({action:'placeOrder',order:{no,name,items:cart.map(x=>Object.assign({},x,{menu:dispName(x),price:unit(x)})),text,total:total()},image:img.split(',')[1]})});
+        body:JSON.stringify({action:'placeOrder',order:{no,key,name,items:cart.map(x=>Object.assign({},x,{menu:dispName(x),price:unit(x)})),text,total:total()},image:img.split(',')[1]})});
       const j=await r.json(); if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');
     }
     $('#statusLink').href='status.html?no='+encodeURIComponent(no);
-    try{localStorage.setItem('mh_last_no',no);localStorage.setItem('mh_last_day',new Date().toDateString())}catch(e){}
+    try{const K=JSON.parse(localStorage.getItem('mh_keys')||'{}');K[no]=key;localStorage.setItem('mh_keys',JSON.stringify(K));localStorage.setItem('mh_last_no',no);localStorage.setItem('mh_last_day',new Date().toDateString())}catch(e){}
     setStatusLinks();
     show('s-done',false);hist=[];
   }catch(e){toast('ส่งออเดอร์ไม่สำเร็จ: '+e.message);loadShop()}
