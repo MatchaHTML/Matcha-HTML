@@ -119,6 +119,9 @@ nav button.on{background:var(--navy);color:var(--yellow)}
 .erow .cat{font-weight:600;color:var(--yellow)}
 .erow .x{background:none;border:none;color:var(--cream);opacity:.6;font-family:var(--px);font-size:11px;cursor:pointer}
 .erow .row input{padding:8px 10px}
+.modal{position:fixed;inset:0;background:rgba(10,20,50,.75);z-index:25;display:none;align-items:flex-end;justify-content:center}
+.modal .box{background:var(--navy);border-top:4px solid var(--cream);width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
+.tx .t{cursor:pointer}.tx .t .ed{font-family:var(--px);font-size:8px;color:var(--yellow);opacity:.7;margin-left:6px}
 .hint{font-size:13px;background:rgba(245,184,46,.12);border-left:4px solid var(--yellow);padding:10px 12px;margin:8px 0}
 </style>
 </head>
@@ -166,6 +169,13 @@ nav button.on{background:var(--navy);color:var(--yellow)}
     <h2>new order</h2>
     <label>วันที่</label><input type="date" id="sDate">
     <div id="menuList" style="margin-top:12px"></div>
+    <button class="btn ghost" id="newMenuBtn" style="margin-top:4px">+ เพิ่มเมนูขาย</button>
+    <div class="panel" id="newMenu" style="display:none;margin-top:10px">
+      <label>ชื่อเมนู</label><input id="nmName" placeholder="เช่น Cloud Matcha">
+      <div class="row"><div><label>ราคา (บาท)</label><input id="nmPrice" type="number" inputmode="decimal"></div>
+        <div><label>ฐานเครื่องดื่ม</label><select id="nmBase"><option value="milk">นมสด</option><option value="oat">นมโอ๊ต</option><option value="coco">มะพร้าว</option><option value="none">อื่นๆ</option></select></div></div>
+      <button class="btn" id="nmSave">ADD MENU &gt;</button>
+    </div>
     <div class="muted" style="margin-top:14px">💳 รายรับทั้งหมดเข้าบัญชีร้าน</div>
     <label>ชำระเงิน</label>
     <div class="seg" id="paySeg"><button data-v="เงินสด" class="on">เงินสด</button><button data-v="โอน">โอน / QR</button></div>
@@ -276,6 +286,11 @@ nav button.on{background:var(--navy);color:var(--yellow)}
   <button data-go="log"><span class="ic">≡</span><span class="t">ประวัติ</span></button>
   <button data-go="set"><span class="ic">⚙</span><span class="t">ตั้งค่า</span></button>
 </div></nav>
+<div class="modal" id="editM"><div class="box">
+  <div class="bar" style="position:static;margin:-14px -14px 10px"><span>edit_record.txt</span><span class="dots"><i></i><i></i><i></i></span></div>
+  <div id="editBody"></div>
+  <div class="row"><button class="btn ghost" id="edCancel">CANCEL</button><button class="btn" id="edSave">SAVE &gt;</button></div>
+</div></div>
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div id="loadTxt">LOADING...</div><div class="pbar"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
 
@@ -292,6 +307,7 @@ const TODAY=()=>ymd(new Date());
 const thMonths=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 const thDays=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
 const thDate=s=>{const [y,m,d]=s.split('-').map(Number);return d+' '+thMonths[m-1]+' '+(y+543)};
+const UNITS=['ชิ้น','ml','ลิตร','กรัม','กก.','แพ็ก','ถุง','กล่อง'];
 const CATS=['ผงมัทฉะ','นม','นมโอ๊ต','น้ำมะพร้าว','แพ็กเกจ','น้ำแข็ง','อุปกรณ์','ค่าส่ง/เดินทาง','อื่นๆ'];
 
 const DEFAULT={
@@ -318,6 +334,7 @@ function demo(action,p){
   if(action==='list') return d;
   if(action==='add'){const id=Math.random().toString(36).slice(2,10);d.push(Object.assign({id},p.tx));LS.set('demoTx',d);return {id}}
   if(action==='delete'){LS.set('demoTx',d.filter(x=>x.id!==p.id));return true}
+  if(action==='update'){LS.set('demoTx',d.map(x=>x.id===p.tx.id?p.tx:x));return true}
   if(action==='getSettings') return LS.get('settings',null);
   if(action==='saveSettings'){LS.set('settings',p.settings);return true}
   if(action==='scanReceipt') throw new Error('โหมด DEMO สแกนใบเสร็จไม่ได้ — ไปที่ ตั้งค่า แล้วเชื่อมต่อ Apps Script ก่อน');
@@ -445,20 +462,30 @@ $('#sSave').onclick=async()=>{
   }catch(e){toast('บันทึกไม่ได้: '+e.message)}finally{loading(false)}
 };
 
+$('#newMenuBtn').onclick=()=>{const p=$('#newMenu');p.style.display=p.style.display==='none'?'block':'none';if(p.style.display==='block')$('#nmName').focus()};
+$('#nmSave').onclick=()=>{const n=$('#nmName').value.trim(),pr=+$('#nmPrice').value;
+  if(!n||!(pr>0))return toast('ใส่ชื่อเมนูและราคาก่อนนะคะ');
+  S.menus.push({name:n,price:pr,base:$('#nmBase').value});$('#nmName').value='';$('#nmPrice').value='';$('#newMenu').style.display='none';
+  renderSell();saveSettings();};
+
 /* ===== SPEND + SCAN ===== */
 let eRows=[];
 $('#eChips').innerHTML=CATS.map(c=>'<button data-c="'+c+'">'+c+'</button>').join('');
-$$('#eChips button').forEach(b=>b.onclick=()=>{eRows.push({cat:b.dataset.c,detail:'',amount:''});renderERows(true)});
-$('#eAddRow').onclick=()=>{eRows.push({cat:'อื่นๆ',detail:'',amount:''});renderERows(true)};
+$$('#eChips button').forEach(b=>b.onclick=()=>{eRows.push({cat:b.dataset.c,detail:'',qty:'',unit:({'นม':'ml','นมโอ๊ต':'ml','น้ำมะพร้าว':'ml','ผงมัทฉะ':'กรัม','น้ำแข็ง':'ถุง'})[b.dataset.c]||'ชิ้น',amount:''});renderERows(true)});
+$('#eAddRow').onclick=()=>{eRows.push({cat:'อื่นๆ',detail:'',qty:'',unit:'ชิ้น',amount:''});renderERows(true)};
 function renderERows(focusLast){
-  $('#eRows').innerHTML=eRows.map((r,i)=>'<div class="erow"><div class="top"><select data-i="'+i+'" data-k="cat" style="width:auto;padding:4px 8px;font-size:14px">'+CATS.map(c=>'<option'+(c===r.cat?' selected':'')+'>'+c+'</option>').join('')+'</select><button class="x" data-rm="'+i+'">✕</button></div>'+
-    '<div class="row"><input style="flex:2" data-i="'+i+'" data-k="detail" value="'+esc(r.detail)+'" placeholder="'+(r.cat==='อื่นๆ'?'ระบุว่าเป็นค่าอะไร *':'รายละเอียด (ไม่ใส่ก็ได้)')+'"><input style="flex:1" type="number" inputmode="decimal" data-i="'+i+'" data-k="amount" value="'+(r.amount===''?'':r.amount)+'" placeholder="บาท"></div></div>').join('');
-  $$('#eRows [data-k]').forEach(el=>{el.oninput=()=>{eRows[el.dataset.i][el.dataset.k]=el.value;eTotal()};
-    if(el.tagName==='SELECT')el.onchange=()=>{eRows[el.dataset.i].cat=el.value;renderERows()}});
+  $('#eRows').innerHTML=eRows.map((r,i)=>{const pu='<div class="muted" id="pu'+i+'" style="font-size:12px;margin-top:6px">'+puText(r)+'</div>';
+    return '<div class="erow"><div class="top"><select data-i="'+i+'" data-k="cat" style="width:auto;padding:4px 8px;font-size:14px">'+CATS.map(c=>'<option'+(c===r.cat?' selected':'')+'>'+c+'</option>').join('')+'</select><button class="x" data-rm="'+i+'">✕</button></div>'+
+    '<input data-i="'+i+'" data-k="detail" value="'+esc(r.detail)+'" placeholder="'+(r.cat==='อื่นๆ'?'ระบุว่าเป็นค่าอะไร *':'รายละเอียด เช่น ยี่ห้อ (ไม่ใส่ก็ได้)')+'">'+
+    '<div class="row" style="margin-top:8px"><input style="flex:1" type="number" inputmode="decimal" data-i="'+i+'" data-k="qty" value="'+(r.qty??'')+'" placeholder="จำนวน"><select style="flex:1" data-i="'+i+'" data-k="unit">'+UNITS.map(u=>'<option'+(u===(r.unit||'ชิ้น')?' selected':'')+'>'+u+'</option>').join('')+'</select><input style="flex:1.2" type="number" inputmode="decimal" data-i="'+i+'" data-k="amount" value="'+(r.amount===''||r.amount==null?'':r.amount)+'" placeholder="ราคา ฿"></div>'+pu+'</div>'}).join('');
+  $$('#eRows [data-k]').forEach(el=>{
+    if(el.tagName==='SELECT')el.onchange=()=>{eRows[el.dataset.i][el.dataset.k]=el.value;renderERows()};
+    else el.oninput=()=>{const r=eRows[el.dataset.i];r[el.dataset.k]=el.value;eTotal();const p=$('#pu'+el.dataset.i);if(p)p.innerHTML=puText(r)}});
   $$('#eRows [data-rm]').forEach(b=>b.onclick=()=>{eRows.splice(+b.dataset.rm,1);renderERows()});
   eTotal();
-  if(focusLast){const a=$$('#eRows [data-k=amount]');if(a.length){const el=eRows[eRows.length-1].cat==='อื่นๆ'?$$('#eRows [data-k=detail]').pop():a.pop();el&&el.focus()}}
+  if(focusLast){const last=eRows.length-1;const el=$('#eRows [data-i="'+last+'"][data-k="'+(eRows[last].cat==='อื่นๆ'?'detail':'qty')+'"]');el&&el.focus()}
 }
+function puText(r){return (+r.amount>0&&+r.qty>0)?'≈ '+(Math.round(r.amount/r.qty*1000)/1000)+' บาท/'+esc(r.unit||'ชิ้น'):''}
 function eTotal(){$('#eTotal').textContent=fmt(sum(eRows,r=>+r.amount||0))}
 $('#eDate').value=TODAY();
 setTimeout(()=>ownSeg($('#eOwner'),eOwn,v=>eOwn=v,true));
@@ -472,9 +499,9 @@ $('#scanFile').onchange=async e=>{
     const r=await call('scanReceipt',{image:b64,mime:'image/jpeg'});
     if(r.date)$('#eDate').value=r.date;
     const its=(r.items||[]).filter(x=>+x.price>0);
-    eRows=its.length?its.map(x=>({cat:CATS.includes(x.category)?x.category:(CATS.includes(r.category)?r.category:'อื่นๆ'),detail:(x.name||'')+(x.qty>1?' ×'+x.qty:''),amount:+x.price})):[{cat:CATS.includes(r.category)?r.category:'อื่นๆ',detail:'',amount:+r.total||''}];
+    eRows=its.length?its.map(x=>({cat:CATS.includes(x.category)?x.category:(CATS.includes(r.category)?r.category:'อื่นๆ'),detail:x.name||'',qty:+x.qty||'',unit:UNITS.includes(x.unit)?x.unit:'ชิ้น',amount:+x.price})):[{cat:CATS.includes(r.category)?r.category:'อื่นๆ',detail:'',amount:+r.total||''}];
     const diff=(+r.total||0)-sum(eRows,x=>+x.amount||0);
-    if(its.length&&r.total&&diff>0.5)eRows.push({cat:'อื่นๆ',detail:'ส่วนต่าง (VAT/ค่าบริการ)',amount:Math.round(diff*100)/100});
+    if(its.length&&r.total&&diff>0.5)eRows.push({cat:'อื่นๆ',detail:'ส่วนต่าง (VAT/ค่าบริการ)',amount:Math.round(diff*100)/100,qty:'',unit:'ชิ้น'});
     renderERows();
     $('#eNote').value=r.store||'';
     $('#eReceipt').value=r.receiptUrl||'';
@@ -495,7 +522,7 @@ $('#eSave').onclick=async()=>{
   const base={date:$('#eDate').value||TODAY(),type:'expense',menu:'',qty:0,payment:'',receiptUrl:$('#eReceipt').value,owner:(S.owners[eOwn]||{name:'บัญชีร้าน'}).name};
   const shop=$('#eNote').value.trim();
   loading(true,'SAVING '+rows.length+' ITEM'+(rows.length>1?'S':'')+'...');
-  try{for(const r of rows){const tx=Object.assign({},base,{category:r.cat,amount:+r.amount,note:[r.detail,shop].filter(Boolean).join(' · ')});
+  try{for(const r of rows){const tx=Object.assign({},base,{category:r.cat,amount:+r.amount,qty:+r.qty||0,unit:+r.qty?(r.unit||'ชิ้น'):'',note:[r.detail,shop].filter(Boolean).join(' · ')});
       const res=await call('add',{tx});TX.push(Object.assign({id:res.id},tx));}
     eRows=[];renderERows();$('#eNote').value='';$('#eReceipt').value='';$('#scanResult').style.display='none';$('#scanImg').style.display='none';
     toast('บันทึกรายจ่าย '+rows.length+' รายการแล้ว ✓');
@@ -533,17 +560,49 @@ function renderLog(){
   const a=TX.filter(x=>String(x.date).slice(0,7)===m&&(!t||x.type===t)).sort((x,y)=>(y.date+(y.createdAt||'')).localeCompare(x.date+(x.createdAt||'')));
   $('#lIn').textContent=fmt(sum(a.filter(x=>x.type==='income'),x=>+x.amount));
   $('#lOut').textContent=fmt(sum(a.filter(x=>x.type==='expense'),x=>+x.amount));
-  $('#lList').innerHTML=a.length?a.map(x=>'<div class="tx"><div><div>'+esc(x.type==='income'?(x.menu+' ×'+x.qty):x.category)+'</div><div class="s">'+thDate(x.date)+(x.owner?' · '+esc(x.owner):'')+(x.payment?' · '+esc(x.payment):'')+(x.note?' · '+esc(x.note):'')+(x.receiptUrl?' · <a href="'+esc(x.receiptUrl)+'" target="_blank">'+(x.type==='income'?'สลิป':'ใบเสร็จ')+'</a>':'')+'</div></div><div style="display:flex;align-items:flex-start"><span class="a '+(x.type==='income'?'in':'out')+'">'+(x.type==='income'?'+':'−')+fmt2(+x.amount)+'</span><button class="del" data-id="'+esc(x.id)+'">✕</button></div></div>').join(''):'<div class="muted" style="padding:14px 0">ไม่มีรายการ</div>';
+  $('#lList').innerHTML=a.length?a.map(x=>'<div class="tx"><div class="t" data-ed="'+esc(x.id)+'"><div>'+esc(x.type==='income'?(x.menu+' ×'+x.qty):x.category+(+x.qty?' · '+fmt2(+x.qty)+' '+(x.unit||''):''))+'<span class="ed">EDIT</span></div><div class="s">'+thDate(x.date)+(x.owner?' · '+esc(x.owner):'')+(x.payment?' · '+esc(x.payment):'')+(x.note?' · '+esc(x.note):'')+(x.receiptUrl?' · <a href="'+esc(x.receiptUrl)+'" target="_blank">'+(x.type==='income'?'สลิป':'ใบเสร็จ')+'</a>':'')+'</div></div><div style="display:flex;align-items:flex-start"><span class="a '+(x.type==='income'?'in':'out')+'">'+(x.type==='income'?'+':'−')+fmt2(+x.amount)+'</span><button class="del" data-id="'+esc(x.id)+'">✕</button></div></div>').join(''):'<div class="muted" style="padding:14px 0">ไม่มีรายการ</div>';
+  $$('#lList [data-ed]').forEach(el=>el.onclick=e=>{if(e.target.tagName==='A')return;openEdit(el.dataset.ed)});
   $$('#lList .del').forEach(b=>b.onclick=async()=>{
     if(!confirmDel())return;
     loading(true,'DELETING...');
     try{await call('delete',{id:b.dataset.id});TX=TX.filter(x=>String(x.id)!==b.dataset.id);renderLog();toast('ลบแล้ว')}catch(e){toast(e.message)}finally{loading(false)}});
 }
+let editing=null;
+function openEdit(id){
+  const x=TX.find(t=>String(t.id)===String(id)); if(!x)return; editing=Object.assign({},x);
+  const inc=x.type==='income';
+  const payers=S.owners.map(o=>o.name).concat(['บัญชีร้าน']);
+  const opt=(arr,v)=>arr.map(a=>'<option'+(a===v?' selected':'')+'>'+esc(a)+'</option>').join('');
+  $('#editBody').innerHTML='<div style="font-family:var(--px);font-size:10px;color:'+(inc?'var(--green)':'var(--red)')+'">&gt; '+(inc?'income':'expense')+' #'+esc(x.id)+'</div>'+
+   '<label>วันที่</label><input type="date" id="edDate" value="'+esc(x.date)+'">'+
+   (inc?'<label>เมนู</label><select id="edMenu">'+opt([...new Set(S.menus.map(m=>m.name).concat([x.menu]))],x.menu)+'</select>'+
+        '<div class="row"><div><label>จำนวน (แก้ว)</label><input type="number" inputmode="numeric" id="edQty" value="'+(+x.qty||0)+'"></div><div><label>ยอดเงิน (บาท)</label><input type="number" inputmode="decimal" id="edAmt" value="'+(+x.amount||0)+'"></div></div>'+
+        '<label>ชำระเงิน</label><select id="edPay">'+opt(['เงินสด','โอน'],x.payment)+'</select>'
+       :'<label>หมวด</label><select id="edCat">'+opt(CATS,x.category)+'</select>'+
+        '<div class="row"><div><label>จำนวน</label><input type="number" inputmode="decimal" id="edQty" value="'+(+x.qty||'')+'"></div><div><label>หน่วย</label><select id="edUnit">'+opt(UNITS,x.unit||'ชิ้น')+'</select></div></div>'+
+        '<label>ราคา (บาท)</label><input type="number" inputmode="decimal" id="edAmt" value="'+(+x.amount||0)+'">'+
+        '<label>ใครออกเงิน</label><select id="edOwner">'+opt(payers,x.owner||'บัญชีร้าน')+'</select>')+
+   '<label>หมายเหตุ</label><input id="edNote" value="'+esc(x.note||'')+'">';
+  if(inc)$('#edMenu').onchange=()=>{const m=S.menus.find(m=>m.name===$('#edMenu').value);if(m)$('#edAmt').value=m.price*(+$('#edQty').value||1)};
+  if(inc)$('#edQty').oninput=()=>{const m=S.menus.find(m=>m.name===$('#edMenu').value);if(m)$('#edAmt').value=m.price*(+$('#edQty').value||0)};
+  $('#editM').style.display='flex';
+}
+$('#edCancel').onclick=()=>{$('#editM').style.display='none';editing=null};
+$('#edSave').onclick=async()=>{
+  if(!editing)return; const x=editing, inc=x.type==='income';
+  x.date=$('#edDate').value||x.date; x.amount=+$('#edAmt').value; x.note=$('#edNote').value; x.qty=+$('#edQty').value||0;
+  if(!(x.amount>0))return toast('ยอดเงินต้องมากกว่า 0');
+  if(inc){x.menu=$('#edMenu').value;x.payment=$('#edPay').value}
+  else{x.category=$('#edCat').value;x.unit=x.qty?$('#edUnit').value:'';x.owner=$('#edOwner').value;if(x.category==='อื่นๆ'&&!x.note.trim())return toast('รายการ "อื่นๆ" กรุณาระบุในหมายเหตุ')}
+  loading(true,'UPDATING...');
+  try{await call('update',{tx:x});TX=TX.map(t=>String(t.id)===String(x.id)?x:t);$('#editM').style.display='none';editing=null;renderLog();toast('แก้ไขแล้ว ✓')}
+  catch(e){toast('แก้ไขไม่ได้: '+e.message)}finally{loading(false)}
+};
 let delArmed=0;function confirmDel(){const n=Date.now();if(n-delArmed<3000){delArmed=0;return true}delArmed=n;toast('กด ✕ อีกครั้งเพื่อยืนยันการลบ');return false}
 $('#lMonth').onchange=renderLog;$('#lType').onchange=renderLog;
 $('#lCsv').onclick=()=>{
   const m=$('#lMonth').value,a=TX.filter(x=>String(x.date).slice(0,7)===m);
-  const h=['date','type','category','menu','qty','amount','payment','owner','note','slipRef','receiptUrl'];
+  const h=['date','type','category','menu','qty','unit','amount','payment','owner','note','slipRef','receiptUrl'];
   const csv='﻿'+h.join(',')+'\n'+a.map(x=>h.map(k=>'"'+String(x[k]??'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));l.download='matcha_'+m+'.csv';l.click();
 };
