@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1E3A8A">
+<title>MATCHA.HTML — admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1E3A8A;--navy2:#172E6E;--cream:#FFF4DC;--yellow:#F5B82E;--orange:#EC7A2C;--green:#8BD45A;--red:#FF7A6B;--px:"Press Start 2P",monospace;--th:"Kanit",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--navy);color:var(--cream);font-family:var(--th);min-height:100vh}
+button,input{font:inherit;color:inherit}
+.bar{position:sticky;top:0;z-index:5;background:var(--cream);color:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-family:var(--px);font-size:10px}
+.bar .dots{display:flex;gap:6px}.bar .dots i{width:10px;height:10px;display:block;background:var(--navy)}
+.bar .dots i:nth-child(1){background:var(--orange)}.bar .dots i:nth-child(2){background:var(--yellow)}
+.wrap{max-width:720px;margin:0 auto;padding:0 16px 40px}
+header{display:flex;align-items:center;gap:12px;padding:18px 0 6px}
+header img{width:44px;image-rendering:pixelated}
+.logo{font-family:var(--px);font-size:16px}.logo b{color:var(--yellow);font-weight:normal}
+.sub{font-family:var(--px);font-size:8px;color:var(--yellow);margin-top:8px}.sub em{color:var(--orange);font-style:normal}
+.tabs{display:flex;gap:6px;margin:14px 0;position:sticky;top:38px;background:var(--navy);padding:8px 0;z-index:4}
+.tabs button{flex:1;padding:10px 4px;border:3px solid var(--cream);background:transparent;cursor:pointer;font-size:14px}
+.tabs button.on{background:var(--cream);color:var(--navy);font-weight:600}
+.tabs b{font-family:var(--px);font-size:10px;margin-left:4px;color:var(--orange)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.sum div{background:var(--navy2);border:3px solid rgba(255,244,220,.25);padding:10px}
+.sum .k{font-size:12px;opacity:.7}.sum .v{font-family:var(--px);font-size:13px;margin-top:6px;color:var(--yellow)}
+.ord{background:var(--navy2);border:3px solid rgba(255,244,220,.3);padding:14px;margin-bottom:12px}
+.ord.new{border-color:var(--yellow);box-shadow:5px 5px 0 var(--orange)}
+.ord.accepted{border-color:var(--cream)}.ord.ready{border-color:var(--green)}
+.ord.done,.ord.cancel{opacity:.5}
+.oh{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.oh .no{font-family:var(--px);font-size:11px;color:var(--yellow)}
+.oh .nm{font-size:22px;font-weight:600;margin-top:6px}
+.oh .tm{font-size:13px;opacity:.7;text-align:right}
+.badge{display:inline-block;font-family:var(--px);font-size:8px;padding:5px 7px;margin-top:6px;background:var(--cream);color:var(--navy)}
+.badge.new{background:var(--yellow)}.badge.ready{background:var(--green)}.badge.cancel{background:var(--red)}
+.it{border-top:1px dashed rgba(255,244,220,.3);padding:8px 0;display:flex;justify-content:space-between;gap:10px}
+.it .a{font-size:17px;font-weight:500}.it .b{font-size:14px;opacity:.8;margin-top:2px}
+.it .q{font-family:var(--px);font-size:13px;color:var(--yellow);white-space:nowrap}
+.tot{display:flex;justify-content:space-between;border-top:1px dashed rgba(255,244,220,.3);padding-top:8px;font-family:var(--px);font-size:11px}
+.acts{display:flex;gap:8px;margin-top:12px}
+.acts button{flex:1;padding:14px 6px;border:none;cursor:pointer;font-size:16px;font-weight:600;box-shadow:4px 4px 0 var(--orange)}
+.acts .go{background:var(--yellow);color:var(--navy)}.acts .ok{background:var(--green);color:var(--navy)}
+.acts .x{flex:0 0 72px;background:transparent;color:var(--cream);border:3px solid rgba(255,244,220,.5);box-shadow:none;font-size:13px}
+.login{margin-top:40px}
+.login input{width:100%;font-size:24px;padding:16px;text-align:center;background:var(--cream);color:var(--navy);border:4px solid var(--cream);letter-spacing:6px}
+.login button{width:100%;margin-top:14px;padding:16px;background:var(--yellow);color:var(--navy);border:none;font-family:var(--px);font-size:12px;box-shadow:5px 5px 0 var(--orange);cursor:pointer}
+.empty{opacity:.5;padding:20px 0;text-align:center}
+.upd{font-family:var(--px);font-size:8px;opacity:.5;margin-top:10px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--cream);color:var(--navy);padding:12px 16px;box-shadow:4px 4px 0 var(--orange);z-index:40;display:none;max-width:90vw}
+.newflash{animation:fl .6s 3}@keyframes fl{50%{background:var(--orange)}}
+</style>
+</head>
+<body>
+<div class="bar"><span>admin_orders.html</span><span class="dots"><i></i><i></i><i></i></span></div>
+<div class="wrap">
+  <header><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAACoCAYAAAAy/QYeAAAB6UlEQVR42u3cIXLCQBSA4bcMojfAkUp0JaoqB+AAtVwAXYFkuEBtD5ADoHoCNAIBsh6BCxdozQ4k7OT7PDNM8s9bkXmbpvNN0L/9+3eb87u3n4/U5f8ceVUIBsEgGASDYEAwCAbBIBgEg2BAMNzD2COIQX51NmEQDIJBMAgGBINgEAyCQTAIBgSDYOhVyt2tPu8WrcdXrqpukgmDIwnBIBgEA4JBMAgGwSAYBAOCQTD0JrWXo6/OmDAIBsEgGAQDgkEwCAbBIBgEA4JBMEQZN4FXdePpxZ83gUfmTeCd/s/zbmHC4EhCMAgGwYBgEAyCQTAIBsGAYBAMUd5u9fb06ekVbPW6NmFwJCEYBINgQDAIBsEgGASDYEAwCIYob7e6a6vZV9bvtoelt2zCIBgEg2AQDAgGwSAYBINgQDAIBsHwbNJ0vonMm6TtZEe5O9JV3SQTBkcSgkEwCAYEg2AQDIJBMAgGBINgiMHsVufuSPOP668JgyMJwSAYEAyCQTAIBsEgGBAMgkEwCAbBgGAQDIJBMAgGwYBgEAyCQTAIBsFAPG63Ovcm6dwbxONlEnak7/ceTBgEg2AQDIIBwSAYBINgEAyCAcEgGGJQN4FHITdeY8IgGASDYBAMggHBIBgEg2AQDAgGwfBAN4uiNqU57NUJAAAAAElFTkSuQmCC" alt=""><div><div class="logo"><b>MATCHA</b>.HTML</div><div class="sub"><em>&gt;</em> sudo orders --live</div></div></header>
+  <div id="loginBox" class="login">
+    <div style="font-family:var(--px);font-size:10px;color:var(--yellow);margin-bottom:12px">&gt; enter admin PIN</div>
+    <input id="pin" type="password" inputmode="numeric" placeholder="••••">
+    <button id="loginBtn">LOGIN &gt;</button>
+    <div style="font-size:13px;opacity:.6;margin-top:12px">ใช้ PIN เดียวกับ APP_PIN ใน Apps Script (ถ้าไม่ได้ตั้ง PIN ไว้ กด LOGIN ได้เลย)</div>
+  </div>
+  <div id="app" style="display:none">
+    <div class="sum"><div><div class="k">ออเดอร์วันนี้</div><div class="v" id="sOrders">0</div></div><div><div class="k">แก้ววันนี้</div><div class="v" id="sCups">0</div></div><div><div class="k">ยอดวันนี้</div><div class="v" id="sTotal">฿0</div></div></div>
+    <div class="tabs" id="tabs">
+      <button data-t="new" class="on">ใหม่<b id="c-new"></b></button>
+      <button data-t="accepted">กำลังทำ<b id="c-accepted"></b></button>
+      <button data-t="ready">พร้อมรับ<b id="c-ready"></b></button>
+      <button data-t="all">ทั้งหมด</button>
+    </div>
+    <div id="list"></div>
+    <div class="upd" id="upd"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const API='https://script.google.com/macros/s/AKfycbxCuTMM5xERPcApcj84-vxWli_Qy-lxFXugBDvqyeuYHRO0mKDEgvip37a__f-XuaQ7Fw/exec';
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const LS={get(k,d){try{const v=localStorage.getItem('mha_'+k);return v==null?d:v}catch(e){return d}},set(k,v){try{localStorage.setItem('mha_'+k,v)}catch(e){}}};
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hm=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const LBL={new:'NEW',accepted:'MAKING',ready:'READY',done:'DONE',cancel:'CANCELLED'};
+let pin=LS.get('pin',''), tab='new', orders=[], known=null, busy=false;
+function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
+async function api(action,p={}){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,pin},p))});const j=await r.json();if(!j.ok)throw new Error(j.error);return j.data}
+$('#loginBtn').onclick=async()=>{pin=$('#pin').value.trim();
+  try{await api('checkPin');LS.set('pin',pin);start()}catch(e){toast('PIN ไม่ถูกต้อง')}};
+$('#pin').onkeydown=e=>{if(e.key==='Enter')$('#loginBtn').click()};
+function start(){$('#loginBox').style.display='none';$('#app').style.display='block';load();setInterval(()=>{if(!busy)load()},10000)}
+$$('#tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;$$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));render()});
+let ctx;function beep(){try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();[0,.18,.36].forEach(t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.value=880+t*800;g.gain.value=.08;o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.12)})}catch(e){}if(navigator.vibrate)navigator.vibrate([200,100,200])}
+document.addEventListener('click',()=>{try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}},{once:true});
+async function load(){
+  try{orders=await api('listOrders');
+    const ids=new Set(orders.filter(o=>o.status==='new').map(o=>o.no));
+    if(known&&[...ids].some(i=>!known.has(i))){beep();toast('🔔 มีออเดอร์ใหม่!');document.title='🔔 NEW ORDER';setTimeout(()=>document.title='MATCHA.HTML — admin',4000)}
+    known=new Set([...(known||[]),...ids]);
+    render();$('#upd').textContent='> updated '+hm(Date.now())+' · auto refresh 10s';
+  }catch(e){$('#upd').textContent='> error: '+e.message}
+}
+function render(){
+  const valid=orders.filter(o=>o.status!=='cancel');
+  $('#sOrders').textContent=valid.length;$('#sCups').textContent=valid.reduce((a,o)=>a+o.cups,0);$('#sTotal').textContent='฿'+valid.reduce((a,o)=>a+o.total,0).toLocaleString();
+  ['new','accepted','ready'].forEach(k=>{const n=orders.filter(o=>o.status===k).length;$('#c-'+k).textContent=n?n:''});
+  let a=tab==='all'?orders.slice().reverse():orders.filter(o=>o.status===tab).sort((x,y)=>x.time.localeCompare(y.time));
+  $('#list').innerHTML=a.length?a.map(o=>{
+    const items=(o.items||[]).map(x=>'<div class="it"><div><div class="a">'+(x.menu&&x.menu.indexOf('Biscoff Milk')===0?'🍪 ':'🍵 ')+esc(x.menu)+'</div><div class="b">'+esc([x.tone?'โทน'+x.tone:'',x.milk||'',x.topping?'+Biscoff':'','หวาน '+x.sweet].filter(Boolean).join(' · '))+'</div></div><div class="q">×'+x.qty+'</div></div>').join('')||'<div class="it"><div class="b">'+esc(o.itemsText)+'</div></div>';
+    const act={new:'<button class="go" data-s="accepted" data-no="'+esc(o.no)+'">✓ รับออเดอร์</button><button class="x" data-s="cancel" data-no="'+esc(o.no)+'">ยกเลิก</button>',
+      accepted:'<button class="ok" data-s="ready" data-no="'+esc(o.no)+'">ทำเสร็จแล้ว</button><button class="x" data-s="new" data-no="'+esc(o.no)+'">ย้อน</button>',
+      ready:'<button class="ok" data-s="done" data-no="'+esc(o.no)+'">ลูกค้ารับแล้ว</button><button class="x" data-s="accepted" data-no="'+esc(o.no)+'">ย้อน</button>',
+      done:'<button class="x" style="flex:1" data-s="ready" data-no="'+esc(o.no)+'">ย้อนสถานะ</button>',cancel:'<button class="x" style="flex:1" data-s="new" data-no="'+esc(o.no)+'">กู้คืนออเดอร์</button>'}[o.status]||'';
+    return '<div class="ord '+o.status+'"><div class="oh"><div><div class="no">#'+esc(o.no)+'</div><div class="nm">'+esc(o.name)+'</div><span class="badge '+o.status+'">'+(LBL[o.status]||o.status)+'</span></div><div class="tm">'+hm(o.time)+'<br>'+o.cups+' แก้ว</div></div>'+items+
+      '<div class="tot"><span>TOTAL</span><span style="color:var(--yellow)">฿'+o.total+'</span></div><div class="acts">'+act+'</div></div>'}).join(''):'<div class="empty">ไม่มีออเดอร์</div>';
+  $$('#list [data-s]').forEach(b=>b.onclick=async()=>{
+    if(b.dataset.s==='cancel'&&!confirm('ยกเลิกออเดอร์ #'+b.dataset.no+' ?'))return;
+    busy=true;b.disabled=true;b.textContent='...';
+    try{await api('setOrderStatus',{no:b.dataset.no,status:b.dataset.s});const o=orders.find(x=>x.no===b.dataset.no);if(o)o.status=b.dataset.s;render();toast('อัปเดตแล้ว ✓')}
+    catch(e){toast(e.message);render()}finally{busy=false}
+  });
+}
+if(LS.get('pin',null)!==null){pin=LS.get('pin','');api('checkPin').then(start).catch(()=>{})}
+</script>
+</body>
+</html>

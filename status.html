@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1E3A8A">
+<title>MATCHA.HTML — order status</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Kanit:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1E3A8A;--navy2:#172E6E;--cream:#FFF4DC;--yellow:#F5B82E;--orange:#EC7A2C;--green:#8BD45A;--red:#FF7A6B;--px:"Press Start 2P",monospace;--th:"Kanit",system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--navy);color:var(--cream);font-family:var(--th);min-height:100vh}
+.bar{position:sticky;top:0;z-index:5;background:var(--cream);color:var(--navy);display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-family:var(--px);font-size:10px}
+.bar .dots{display:flex;gap:6px}.bar .dots i{width:10px;height:10px;display:block;background:var(--navy)}
+.bar .dots i:nth-child(1){background:var(--orange)}.bar .dots i:nth-child(2){background:var(--yellow)}
+.wrap{max-width:720px;margin:0 auto;padding:0 18px 40px}
+header{display:flex;align-items:center;gap:12px;padding:18px 0 6px}
+header img{width:46px;image-rendering:pixelated}
+.logo{font-family:var(--px);font-size:17px}.logo b{color:var(--yellow);font-weight:normal}
+.sub{font-family:var(--px);font-size:8px;color:var(--yellow);margin-top:8px}.sub em{color:var(--orange);font-style:normal}
+h2{font-family:var(--px);font-size:11px;margin:24px 0 10px;letter-spacing:1px}
+h2:before{content:"> ";color:var(--orange)}
+.mine{background:var(--cream);color:var(--navy);padding:18px;margin-top:16px;box-shadow:6px 6px 0 var(--orange)}
+.mine .no{font-family:var(--px);font-size:16px}
+.mine .st{font-size:30px;font-weight:600;margin-top:10px}
+.mine .d{font-size:15px;margin-top:6px;opacity:.8}
+.pbar{display:flex;gap:4px;margin-top:14px}.pbar i{flex:1;height:14px;border:2px solid var(--navy)}.pbar i.f{background:var(--green);border-color:var(--green)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.card{background:var(--navy2);border:3px solid rgba(255,244,220,.3);padding:12px}
+.card .no{font-family:var(--px);font-size:11px}
+.card .n{font-size:20px;font-weight:600;margin-top:8px;word-break:break-word}
+.card .c{font-size:13px;opacity:.7;margin-top:2px}
+.card.me{border-color:var(--yellow);box-shadow:4px 4px 0 var(--orange)}
+.ready .card{border-color:var(--green)}.ready h2{color:var(--green)}
+.accepted h2{color:var(--yellow)}
+.new h2{color:var(--cream)}
+.done .card{opacity:.45}
+.empty{opacity:.5;font-size:14px}
+.upd{font-family:var(--px);font-size:8px;opacity:.5;margin-top:18px}
+.blink{animation:bl 1s steps(2) infinite}@keyframes bl{50%{opacity:0}}
+a.btn{display:block;text-align:center;padding:16px;background:var(--yellow);color:var(--navy);font-family:var(--px);font-size:12px;text-decoration:none;box-shadow:5px 5px 0 var(--orange);margin-top:24px}
+</style>
+</head>
+<body>
+<div class="bar"><span>order_status.html</span><span class="dots"><i></i><i></i><i></i></span></div>
+<div class="wrap">
+  <header><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAACoCAYAAAAy/QYeAAAB6UlEQVR42u3cIXLCQBSA4bcMojfAkUp0JaoqB+AAtVwAXYFkuEBtD5ADoHoCNAIBsh6BCxdozQ4k7OT7PDNM8s9bkXmbpvNN0L/9+3eb87u3n4/U5f8ceVUIBsEgGASDYEAwCAbBIBgEg2BAMNzD2COIQX51NmEQDIJBMAgGBINgEAyCQTAIBgSDYOhVyt2tPu8WrcdXrqpukgmDIwnBIBgEA4JBMAgGwSAYBAOCQTD0JrWXo6/OmDAIBsEgGAQDgkEwCAbBIBgEA4JBMEQZN4FXdePpxZ83gUfmTeCd/s/zbmHC4EhCMAgGwYBgEAyCQTAIBsGAYBAMUd5u9fb06ekVbPW6NmFwJCEYBINgQDAIBsEgGASDYEAwCIYob7e6a6vZV9bvtoelt2zCIBgEg2AQDAgGwSAYBINgQDAIBsHwbNJ0vonMm6TtZEe5O9JV3SQTBkcSgkEwCAYEg2AQDIJBMAgGBINgiMHsVufuSPOP668JgyMJwSAYEAyCQTAIBsEgGBAMgkEwCAbBgGAQDIJBMAgGwYBgEAyCQTAIBsFAPG63Ovcm6dwbxONlEnak7/ceTBgEg2AQDIIBwSAYBINgEAyCAcEgGGJQN4FHITdeY8IgGASDYBAMggHBIBgEg2AQDAgGwfBAN4uiNqU57NUJAAAAAElFTkSuQmCC" alt=""><div><div class="logo"><b>MATCHA</b>.HTML</div><div class="sub"><em>&gt;</em> queue.status <span class="blink">_</span></div></div></header>
+  <div id="mine"></div>
+  <section class="ready"><h2>READY · พร้อมรับ</h2><div class="grid" id="g-ready"></div></section>
+  <section class="accepted"><h2>MAKING · กำลังทำ</h2><div class="grid" id="g-accepted"></div></section>
+  <section class="new"><h2>QUEUE · รอรับออเดอร์</h2><div class="grid" id="g-new"></div></section>
+  <section class="done"><h2>DONE · รับแล้ว</h2><div class="grid" id="g-done"></div></section>
+  <div class="upd" id="upd"></div>
+  <a class="btn" href="order.html">+ สั่งเพิ่ม</a>
+</div>
+<script>
+const API='https://script.google.com/macros/s/AKfycbxCuTMM5xERPcApcj84-vxWli_Qy-lxFXugBDvqyeuYHRO0mKDEgvip37a__f-XuaQ7Fw/exec';
+const $=s=>document.querySelector(s);
+const MY=new URLSearchParams(location.search).get('no')||'';
+const ST={new:['รอรับออเดอร์',1],accepted:['กำลังทำ',2],ready:['พร้อมรับแล้ว! 🎉',3],done:['รับแล้ว ขอบคุณค่ะ 💚',4],cancel:['ยกเลิก',0]};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hm=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+async function load(){
+  try{
+    const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'listOrders'})});
+    const j=await r.json(); if(!j.ok)throw new Error(j.error);
+    render(j.data||[]);
+    $('#upd').textContent='> updated '+hm(Date.now())+' · auto refresh 10s';
+  }catch(e){$('#upd').textContent='> offline: '+e.message}
+}
+function render(list){
+  list.sort((a,b)=>a.time.localeCompare(b.time));
+  ['ready','accepted','new','done'].forEach(k=>{
+    const a=list.filter(o=>o.status===k); if(k==='done')a.reverse();
+    $('#g-'+k).innerHTML=a.length?a.slice(0,k==='done'?12:99).map(o=>'<div class="card'+(o.no===MY?' me':'')+'"><div class="no">#'+esc(o.no)+'</div><div class="n">'+esc(o.name)+'</div><div class="c">'+o.cups+' แก้ว · '+hm(o.time)+'</div></div>').join(''):'<div class="empty">—</div>';
+  });
+  if(MY){
+    const o=list.find(x=>x.no===MY);
+    if(!o){$('#mine').innerHTML='<div class="mine"><div class="no">#'+esc(MY)+'</div><div class="d">ไม่พบออเดอร์ของวันนี้</div></div>';return}
+    const [t,step]=ST[o.status]||['-',0];
+    const q=list.filter(x=>(x.status==='new'||x.status==='accepted')&&x.time<o.time).length;
+    $('#mine').innerHTML='<div class="mine"><div class="no">#'+esc(o.no)+' · '+esc(o.name)+'</div><div class="st">'+t+'</div>'+
+      '<div class="d">'+esc((o.items||[]).map(x=>x.menu+' ×'+x.qty).join(', '))+' · ฿'+o.total+'</div>'+
+      ((o.status==='new'||o.status==='accepted')&&q?'<div class="d">มีคิวก่อนหน้า '+q+' ออเดอร์</div>':'')+
+      (o.status==='cancel'?'':'<div class="pbar">'+[1,2,3,4].map(i=>'<i class="'+(i<=step?'f':'')+'"></i>').join('')+'</div>')+'</div>';
+  }
+}
+load(); setInterval(load,10000);
+</script>
+</body>
+</html>
