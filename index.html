@@ -273,7 +273,8 @@ const DEFAULT={
 let S=Object.assign({},DEFAULT,LS.get('settings',{}));
 S.cost=Object.assign({},DEFAULT.cost,S.cost||{});
 let TX=[];
-let api=LS.get('api',''), pin=LS.get('pin','');
+const DEFAULT_API='https://script.google.com/macros/s/AKfycbxCuTMM5xERPcApcj84-vxWli_Qy-lxFXugBDvqyeuYHRO0mKDEgvip37a__f-XuaQ7Fw/exec';
+let api=LS.get('api',DEFAULT_API), pin=LS.get('pin','');
 
 /* ===== API (Apps Script or local demo) ===== */
 async function call(action,payload={}){
