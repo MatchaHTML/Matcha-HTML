@@ -61,14 +61,25 @@ input.name:focus{border-color:var(--yellow)}
 .loading .p i:nth-child(2){animation-delay:.1s}.loading .p i:nth-child(3){animation-delay:.2s}.loading .p i:nth-child(4){animation-delay:.3s}.loading .p i:nth-child(5){animation-delay:.4s}.loading .p i:nth-child(6){animation-delay:.5s}
 @keyframes b{50%{background:var(--green)}}
 .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--cream);color:var(--navy);padding:14px 18px;box-shadow:4px 4px 0 var(--orange);z-index:40;display:none;max-width:90vw;font-size:16px}
+.stbtn{flex:none;border:3px solid var(--cream);color:var(--cream);text-decoration:none;padding:8px 10px;font-size:14px;font-weight:500;white-space:nowrap}
+.stbtn:active{background:var(--cream);color:var(--navy)}
 .cm{font-family:var(--px);font-size:8px;opacity:.4;text-align:center;margin-top:30px}
 </style>
 </head>
 <body>
 <div class="bar"><span>order.html</span><span class="dots"><i></i><i></i><i></i></span></div>
 <div class="wrap">
-  <header><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAACoCAYAAAAy/QYeAAAB6UlEQVR42u3cIXLCQBSA4bcMojfAkUp0JaoqB+AAtVwAXYFkuEBtD5ADoHoCNAIBsh6BCxdozQ4k7OT7PDNM8s9bkXmbpvNN0L/9+3eb87u3n4/U5f8ceVUIBsEgGASDYEAwCAbBIBgEg2BAMNzD2COIQX51NmEQDIJBMAgGBINgEAyCQTAIBgSDYOhVyt2tPu8WrcdXrqpukgmDIwnBIBgEA4JBMAgGwSAYBAOCQTD0JrWXo6/OmDAIBsEgGAQDgkEwCAbBIBgEA4JBMEQZN4FXdePpxZ83gUfmTeCd/s/zbmHC4EhCMAgGwYBgEAyCQTAIBsGAYBAMUd5u9fb06ekVbPW6NmFwJCEYBINgQDAIBsEgGASDYEAwCIYob7e6a6vZV9bvtoelt2zCIBgEg2AQDAgGwSAYBINgQDAIBsHwbNJ0vonMm6TtZEe5O9JV3SQTBkcSgkEwCAYEg2AQDIJBMAgGBINgiMHsVufuSPOP668JgyMJwSAYEAyCQTAIBsEgGBAMgkEwCAbBgGAQDIJBMAgGwYBgEAyCQTAIBsFAPG63Ovcm6dwbxONlEnak7/ceTBgEg2AQDIIBwSAYBINgEAyCAcEgGGJQN4FHITdeY8IgGASDYBAMggHBIBgEg2AQDAgGwfBAN4uiNqU57NUJAAAAAElFTkSuQmCC" alt=""><div><div class="logo"><b>MATCHA</b>.HTML</div><div class="sub"><em>&gt;</em> 404: STRESS NOT FOUND</div></div></header>
+  <header><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAACoCAYAAAAy/QYeAAAB6UlEQVR42u3cIXLCQBSA4bcMojfAkUp0JaoqB+AAtVwAXYFkuEBtD5ADoHoCNAIBsh6BCxdozQ4k7OT7PDNM8s9bkXmbpvNN0L/9+3eb87u3n4/U5f8ceVUIBsEgGASDYEAwCAbBIBgEg2BAMNzD2COIQX51NmEQDIJBMAgGBINgEAyCQTAIBgSDYOhVyt2tPu8WrcdXrqpukgmDIwnBIBgEA4JBMAgGwSAYBAOCQTD0JrWXo6/OmDAIBsEgGAQDgkEwCAbBIBgEA4JBMEQZN4FXdePpxZ83gUfmTeCd/s/zbmHC4EhCMAgGwYBgEAyCQTAIBsGAYBAMUd5u9fb06ekVbPW6NmFwJCEYBINgQDAIBsEgGASDYEAwCIYob7e6a6vZV9bvtoelt2zCIBgEg2AQDAgGwSAYBINgQDAIBsHwbNJ0vonMm6TtZEe5O9JV3SQTBkcSgkEwCAYEg2AQDIJBMAgGBINgiMHsVufuSPOP668JgyMJwSAYEAyCQTAIBsEgGBAMgkEwCAbBgGAQDIJBMAgGwYBgEAyCQTAIBsFAPG63Ovcm6dwbxONlEnak7/ceTBgEg2AQDIIBwSAYBINgEAyCAcEgGGJQN4FHITdeY8IgGASDYBAMggHBIBgEg2AQDAgGwfBAN4uiNqU57NUJAAAAAElFTkSuQmCC" alt=""><div style="flex:1"><div class="logo"><b>MATCHA</b>.HTML</div><div class="sub"><em>&gt;</em> 404: STRESS NOT FOUND</div></div><a class="stbtn" id="stTop" href="status.html">📋 สถานะ</a></header>
   <div class="prog" id="prog"></div>
+
+  <!-- closed -->
+  <div class="step" id="s-closed">
+    <div class="q">shop.status = "CLOSED"</div>
+    <div class="qt" id="closedMsg">ตอนนี้ร้านปิดรับออเดอร์</div>
+    <div class="who" id="closedSub"></div>
+    <button class="go ghost" onclick="location.reload()">REFRESH</button>
+    <a class="go" href="status.html" style="text-align:center;text-decoration:none">ดูสถานะออเดอร์ &gt;</a>
+  </div>
 
   <!-- 1 name -->
   <div class="step on" id="s-name">
@@ -76,6 +87,7 @@ input.name:focus{border-color:var(--yellow)}
     <div class="qt">ชื่อของคุณ</div>
     <input class="name" id="name" maxlength="30" placeholder="พิมพ์ชื่อ" autocomplete="name">
     <button class="go" id="nameNext" disabled>NEXT &gt;</button>
+    <a class="go ghost" id="stMine" href="status.html" style="display:block;text-align:center;text-decoration:none;margin-top:14px;font-family:var(--th);font-size:17px">📋 ดูสถานะออเดอร์</a>
   </div>
 
   <!-- 2 menu -->
@@ -83,6 +95,7 @@ input.name:focus{border-color:var(--yellow)}
     <div class="q">step: select_menu</div>
     <div class="qt">เลือกเมนู</div>
     <button class="big" data-menu="มัทฉะ"><span class="ic">🍵</span><span style="flex:1">Matcha Cold Whisk<small>มัทฉะตีเย็น</small></span><span class="pr">฿80</span></button>
+    <button class="big" data-menu="Matcha Coconut" id="cocoBtn" style="display:none"><span class="ic">🥥</span><span style="flex:1">Matcha Coconut<small id="cocoLeft">มัทฉะมะพร้าว · มีจำนวนจำกัด</small></span><span class="pr">฿100</span></button>
     <button class="big" data-menu="Biscoff Milk"><span class="ic">🍪</span><span style="flex:1">Biscoff Milk<small>บิสคอฟมิลค์</small></span><span class="pr">฿60</span></button>
     <button class="back" data-back>&lt; BACK</button>
   </div>
@@ -165,7 +178,9 @@ input.name:focus{border-color:var(--yellow)}
 const API='https://script.google.com/macros/s/AKfycbxCuTMM5xERPcApcj84-vxWli_Qy-lxFXugBDvqyeuYHRO0mKDEgvip37a__f-XuaQ7Fw/exec';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const STEPS=['s-name','s-menu','s-tone','s-milk','s-top','s-sweet','s-qty','s-cart','s-done'];
-const PRICE={'มัทฉะ':80,'Biscoff Milk':60}, OAT=5, TOP=5;
+const PRICE={'มัทฉะ':80,'Biscoff Milk':60,'Matcha Coconut':100}, OAT=5, TOP=5;
+let SHOP=null;
+const cocoInCart=()=>cart.filter(x=>x.menu==='Matcha Coconut').reduce((a,x)=>a+x.qty,0);
 const unit=x=>PRICE[x.menu]+(x.milk==='นมโอ๊ต'?OAT:0)+(x.topping?TOP:0), line=x=>unit(x)*x.qty, total=()=>cart.reduce((a,x)=>a+line(x),0);
 let name='', cart=[], cur={}, hist=[], qty=1, lastImg='', lastNo='';
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2800)}
@@ -182,11 +197,14 @@ $$('[data-back]').forEach(b=>b.onclick=()=>{const p=hist.pop();if(p)show(p,false
 /* 1 name */
 $('#name').oninput=()=>{$('#nameNext').disabled=!$('#name').value.trim()};
 $('#name').onkeydown=e=>{if(e.key==='Enter'&&$('#name').value.trim())$('#nameNext').click()};
-$('#nameNext').onclick=()=>{name=$('#name').value.trim();show('s-menu')};
+$('#nameNext').onclick=()=>{name=$('#name').value.trim();try{localStorage.setItem('mh_name',name)}catch(e){}show('s-menu')};
 /* 2 menu */
-$$('[data-menu]').forEach(b=>b.onclick=()=>{cur={menu:b.dataset.menu};show(cur.menu==='มัทฉะ'?'s-tone':'s-sweet')});
+$$('[data-menu]').forEach(b=>b.onclick=()=>{cur={menu:b.dataset.menu};
+  if(cur.menu==='Matcha Coconut'&&cocoMax()<1)return toast('Matcha Coconut หมดแล้วค่ะ');
+  show(cur.menu==='Biscoff Milk'?'s-sweet':'s-tone')});
+function cocoMax(){return SHOP&&SHOP.limited.available?SHOP.limited.left-cocoInCart():0}
 /* 3 tone */
-$$('[data-tone]').forEach(b=>b.onclick=()=>{cur.tone=b.dataset.tone;show('s-milk')});
+$$('[data-tone]').forEach(b=>b.onclick=()=>{cur.tone=b.dataset.tone;show(cur.menu==='Matcha Coconut'?'s-sweet':'s-milk')});
 $$('[data-milk]').forEach(b=>b.onclick=()=>{cur.milk=b.dataset.milk;show('s-top')});
 $$('[data-top]').forEach(b=>b.onclick=()=>{cur.topping=b.dataset.top==='1';show('s-sweet')});
 /* 4 sweet */
@@ -195,15 +213,16 @@ $$('[data-s]').forEach(b=>b.onclick=()=>{cur.sweet=+b.dataset.s;qty=1;$('#qVal')
   $('#qtyWhat').textContent=label(cur);show('s-qty')});
 /* 5 qty */
 $('#qMinus').onclick=()=>{qty=Math.max(1,qty-1);$('#qVal').textContent=qty};
-$('#qPlus').onclick=()=>{qty=Math.min(20,qty+1);$('#qVal').textContent=qty};
+$('#qPlus').onclick=()=>{const mx=cur.menu==='Matcha Coconut'?cocoMax():20;if(qty>=mx)return toast(cur.menu==='Matcha Coconut'?'Matcha Coconut เหลือ '+mx+' แก้ว':'สั่งได้สูงสุด 20 แก้ว');qty++;$('#qVal').textContent=qty};
 $('#qtyNext').onclick=()=>{cart.push(Object.assign({},cur,{qty}));hist=[];renderCart();show('s-cart',false)};
 /* 6 cart */
 function label(x){return dispName(x)+(x.tone?' · โทน'+x.tone:'')+(x.milk?' · '+x.milk:'')+(x.topping?' · +Biscoff':'')+' · หวาน '+x.sweet+' · ฿'+unit(x)+'/แก้ว'}
 function dispName(x){return x.menu==='มัทฉะ'?'Matcha Cold Whisk':x.menu}
+const icon=x=>x.menu==='Biscoff Milk'?'🍪 ':x.menu==='Matcha Coconut'?'🥥 ':'🍵 ';
 function detail(x){return [x.tone?'โทน'+x.tone:'',x.milk||'',x.topping?'+Biscoff':'','หวาน '+x.sweet+'/10'].filter(Boolean).join(' · ')}
 function renderCart(){
   $('#cartWho').textContent='ชื่อผู้สั่ง: '+name;
-  $('#cartList').innerHTML=cart.map((x,i)=>'<div class="item"><div><div class="n">'+(x.menu==='มัทฉะ'?'🍵 ':'🍪 ')+esc(dispName(x))+'</div><div class="d">'+esc(detail(x))+'</div></div><div style="text-align:right"><div class="x">×'+x.qty+'</div><div class="x" style="margin-top:8px;color:var(--cream)">฿'+line(x)+'</div><button class="rm" data-rm="'+i+'">✕</button></div></div>').join('')||'<div class="hint">ยังไม่มีรายการ</div>';
+  $('#cartList').innerHTML=cart.map((x,i)=>'<div class="item"><div><div class="n">'+icon(x)+esc(dispName(x))+'</div><div class="d">'+esc(detail(x))+'</div></div><div style="text-align:right"><div class="x">×'+x.qty+'</div><div class="x" style="margin-top:8px;color:var(--cream)">฿'+line(x)+'</div><button class="rm" data-rm="'+i+'">✕</button></div></div>').join('')||'<div class="hint">ยังไม่มีรายการ</div>';
   $$('[data-rm]').forEach(b=>b.onclick=()=>{cart.splice(+b.dataset.rm,1);renderCart()});
   $('#confirm').disabled=!cart.length;
   $('#cartTotal').textContent='฿'+total();
@@ -234,7 +253,7 @@ async function drawImage(no,when){
   g.font='22px Kanit';g.globalAlpha=.75;g.fillText('#'+no+'  ·  '+when,32,270);g.globalAlpha=1;
   dash(g,300);
   cart.forEach((x,i)=>{const y=300+i*rowH;
-    g.font='600 30px Kanit';g.fillStyle='#FFF4DC';g.fillText((x.menu==='มัทฉะ'?'🍵 ':'🍪 ')+dispName(x),32,y+50);
+    g.font='600 30px Kanit';g.fillStyle='#FFF4DC';g.fillText(icon(x)+dispName(x),32,y+50);
     g.font='22px Kanit';g.globalAlpha=.8;g.fillText(detail(x),76,y+86);g.globalAlpha=1;
     g.font='22px "Press Start 2P"';g.fillStyle='#F5B82E';g.textAlign='right';g.fillText('×'+x.qty,W-32,y+50);g.font='600 24px Kanit';g.fillStyle='#FFF4DC';g.fillText('฿'+line(x),W-32,y+88);g.textAlign='left';
   });
@@ -259,8 +278,10 @@ $('#confirm').onclick=async()=>{
       const j=await r.json(); if(!j.ok)throw new Error(j.error||'ส่งไม่สำเร็จ');
     }
     $('#statusLink').href='status.html?no='+encodeURIComponent(no);
+    try{localStorage.setItem('mh_last_no',no);localStorage.setItem('mh_last_day',new Date().toDateString())}catch(e){}
+    setStatusLinks();
     show('s-done',false);hist=[];
-  }catch(e){toast('ส่งออเดอร์ไม่สำเร็จ ลองใหม่อีกครั้ง ('+e.message+')')}
+  }catch(e){toast('ส่งออเดอร์ไม่สำเร็จ: '+e.message);loadShop()}
   finally{$('#loading').style.display='none'}
 };
 $('#saveImg').onclick=async()=>{
@@ -270,7 +291,28 @@ $('#saveImg').onclick=async()=>{
   const a=document.createElement('a');a.href=lastImg;a.download='order_'+lastNo+'.png';a.click();
 };
 $('#newOrder').onclick=()=>{cart=[];cur={};hist=[];show('s-menu',false);$('#prog').innerHTML=$('#prog').innerHTML};
-show('s-name',false);
+async function loadShop(){
+  if(!API){show('s-name',false);return}
+  try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'getShop'})});
+    const j=await r.json(); if(!j.ok)throw new Error(j.error); SHOP=j.data;
+  }catch(e){SHOP=null}
+  if(SHOP&&!SHOP.isOpen){
+    $('#closedMsg').textContent=SHOP.reason==='before'?'ร้านยังไม่เปิดรับออเดอร์':'วันนี้ปิดรับออเดอร์แล้ว';
+    $('#closedSub').textContent=SHOP.reason==='before'?'เปิดรับออเดอร์ '+SHOP.open+' – '+SHOP.close+' น.':'เวลารับออเดอร์ '+SHOP.open+' – '+SHOP.close+' น. · แล้วพบกันใหม่นะคะ 💚';
+    show('s-closed',false);return false;
+  }
+  const L=SHOP&&SHOP.limited;
+  $('#cocoBtn').style.display=L&&L.on?'flex':'none';
+  if(L&&L.on){$('#cocoLeft').textContent=L.left>0?'มัทฉะมะพร้าว · เหลือ '+L.left+' แก้ว':'มัทฉะมะพร้าว · หมดแล้ว';$('#cocoBtn').style.opacity=L.left>0?1:.45}
+  if(!$$('.step').some(x=>x.classList.contains('on')&&x.id!=='s-closed'))show('s-name',false);
+  return true;
+}
+function setStatusLinks(){let no='';try{if(localStorage.getItem('mh_last_day')===new Date().toDateString())no=localStorage.getItem('mh_last_no')||''}catch(e){}
+  const h='status.html'+(no?'?no='+encodeURIComponent(no):'');$('#stTop').href=h;$('#stMine').href=h;$('#stMine').textContent=no?'📋 ดูสถานะออเดอร์ #'+no:'📋 ดูสถานะออเดอร์'}
+setStatusLinks();
+try{const n=localStorage.getItem('mh_name');if(n){$('#name').value=n;$('#nameNext').disabled=false}}catch(e){}
+loadShop();
+$('#addMore').addEventListener('click',()=>loadShop());
 </script>
 </body>
 </html>

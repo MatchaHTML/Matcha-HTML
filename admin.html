@@ -19,7 +19,7 @@ header{display:flex;align-items:center;gap:12px;padding:18px 0 6px}
 header img{width:44px;image-rendering:pixelated}
 .logo{font-family:var(--px);font-size:16px}.logo b{color:var(--yellow);font-weight:normal}
 .sub{font-family:var(--px);font-size:8px;color:var(--yellow);margin-top:8px}.sub em{color:var(--orange);font-style:normal}
-.tabs{display:flex;gap:6px;margin:14px 0;position:sticky;top:38px;background:var(--navy);padding:8px 0;z-index:4}
+.tabs{display:flex;gap:6px;margin:14px 0;position:sticky;top:36px;background:var(--navy);padding:8px 0;z-index:4}
 .tabs button{flex:1;padding:10px 4px;border:3px solid var(--cream);background:transparent;cursor:pointer;font-size:14px}
 .tabs button.on{background:var(--cream);color:var(--navy);font-weight:600}
 .tabs b{font-family:var(--px);font-size:10px;margin-left:4px;color:var(--orange)}
@@ -50,6 +50,25 @@ header img{width:44px;image-rendering:pixelated}
 .empty{opacity:.5;padding:20px 0;text-align:center}
 .upd{font-family:var(--px);font-size:8px;opacity:.5;margin-top:10px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--cream);color:var(--navy);padding:12px 16px;box-shadow:4px 4px 0 var(--orange);z-index:40;display:none;max-width:90vw}
+.login input{display:block}
+.who{display:flex;justify-content:space-between;align-items:center;font-family:var(--px);font-size:9px;color:var(--yellow);margin:6px 0 10px}
+.who button{background:none;border:2px solid rgba(255,244,220,.5);color:var(--cream);font-family:var(--px);font-size:8px;padding:6px 8px;cursor:pointer}
+.shop{background:var(--navy2);border:3px solid var(--cream);padding:12px;margin-bottom:12px}
+.sh{display:flex;justify-content:space-between;align-items:center;font-family:var(--px);font-size:11px;margin-bottom:10px}
+.pill{font-family:var(--px);font-size:9px;padding:6px 8px;background:var(--green);color:var(--navy)}.pill.off{background:var(--red)}
+.row2{display:flex;gap:8px;align-items:flex-end}.row2 label{flex:1;font-size:12px;opacity:.9}
+.row2 input{display:block;width:100%;margin-top:4px;padding:9px;font-size:16px;background:var(--cream);color:var(--navy);border:none}
+.sbtn{padding:11px 12px;border:none;background:var(--yellow);color:var(--navy);font-weight:600;cursor:pointer}
+.sbtn.ghost{background:transparent;color:var(--cream);border:2px solid rgba(255,244,220,.5)}
+.wide{display:block;width:100%;margin-top:10px;padding:13px;border:3px solid var(--cream);background:transparent;font-weight:600;font-size:16px;cursor:pointer}
+.wide.on{background:var(--red);border-color:var(--red);color:var(--navy)}
+.wide.sum2{background:var(--yellow);color:var(--navy);border-color:var(--yellow);box-shadow:4px 4px 0 var(--orange)}
+.coco{border-top:1px dashed rgba(255,244,220,.3);margin-top:12px;padding-top:10px}
+.sh2{font-size:15px;font-weight:600;margin-bottom:6px}.muted{opacity:.7;font-weight:400;font-size:13px}
+.modal{position:fixed;inset:0;background:rgba(10,20,50,.8);z-index:30;display:none;align-items:flex-end;justify-content:center}
+.modal .box{background:var(--navy);border-top:4px solid var(--cream);width:100%;max-width:720px;max-height:88vh;overflow:auto;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
+.chk{display:flex;gap:10px;align-items:center;margin-top:14px;font-size:15px}.chk input{width:22px;height:22px}
+.srow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed rgba(255,244,220,.3)}
 .newflash{animation:fl .6s 3}@keyframes fl{50%{background:var(--orange)}}
 </style>
 </head>
@@ -58,12 +77,23 @@ header img{width:44px;image-rendering:pixelated}
 <div class="wrap">
   <header><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIwAAACoCAYAAAAy/QYeAAAB6UlEQVR42u3cIXLCQBSA4bcMojfAkUp0JaoqB+AAtVwAXYFkuEBtD5ADoHoCNAIBsh6BCxdozQ4k7OT7PDNM8s9bkXmbpvNN0L/9+3eb87u3n4/U5f8ceVUIBsEgGASDYEAwCAbBIBgEg2BAMNzD2COIQX51NmEQDIJBMAgGBINgEAyCQTAIBgSDYOhVyt2tPu8WrcdXrqpukgmDIwnBIBgEA4JBMAgGwSAYBAOCQTD0JrWXo6/OmDAIBsEgGAQDgkEwCAbBIBgEA4JBMEQZN4FXdePpxZ83gUfmTeCd/s/zbmHC4EhCMAgGwYBgEAyCQTAIBsGAYBAMUd5u9fb06ekVbPW6NmFwJCEYBINgQDAIBsEgGASDYEAwCIYob7e6a6vZV9bvtoelt2zCIBgEg2AQDAgGwSAYBINgQDAIBsHwbNJ0vonMm6TtZEe5O9JV3SQTBkcSgkEwCAYEg2AQDIJBMAgGBINgiMHsVufuSPOP668JgyMJwSAYEAyCQTAIBsEgGBAMgkEwCAbBgGAQDIJBMAgGwYBgEAyCQTAIBsFAPG63Ovcm6dwbxONlEnak7/ceTBgEg2AQDIIBwSAYBINgEAyCAcEgGGJQN4FHITdeY8IgGASDYBAMggHBIBgEg2AQDAgGwfBAN4uiNqU57NUJAAAAAElFTkSuQmCC" alt=""><div><div class="logo"><b>MATCHA</b>.HTML</div><div class="sub"><em>&gt;</em> sudo orders --live</div></div></header>
   <div id="loginBox" class="login">
-    <div style="font-family:var(--px);font-size:10px;color:var(--yellow);margin-bottom:12px">&gt; enter admin PIN</div>
-    <input id="pin" type="password" inputmode="numeric" placeholder="••••">
+    <div style="font-family:var(--px);font-size:10px;color:var(--yellow);margin-bottom:12px">&gt; sudo login</div>
+    <input id="uid" placeholder="ID" autocapitalize="off" autocomplete="username" style="letter-spacing:1px">
+    <input id="pin" type="password" placeholder="password" autocomplete="current-password" style="margin-top:10px">
     <button id="loginBtn">LOGIN &gt;</button>
-    <div style="font-size:13px;opacity:.6;margin-top:12px">ใช้ PIN เดียวกับ APP_PIN ใน Apps Script (ถ้าไม่ได้ตั้ง PIN ไว้ กด LOGIN ได้เลย)</div>
   </div>
   <div id="app" style="display:none">
+    <div class="who"><span>&gt; user: <b id="who"></b></span><span style="display:flex;gap:6px"><a href="./" style="border:2px solid rgba(255,244,220,.5);color:var(--cream);font-family:var(--px);font-size:8px;padding:6px 8px;text-decoration:none">← บัญชี</a><button id="logout">LOGOUT</button></span></div>
+    <div class="shop" id="shopBox">
+      <div class="sh"><span>SHOP</span><span class="pill" id="shopPill">...</span></div>
+      <div class="row2"><label>เปิดรับ<input type="time" id="tOpen"></label><label>ปิดรับ<input type="time" id="tClose"></label><button class="sbtn" id="saveTime">SAVE</button></div>
+      <button class="wide" id="toggleClose">ปิดรับออเดอร์วันนี้</button>
+      <div class="coco">
+        <div class="sh2">🥥 Matcha Coconut วันนี้ <span id="cocoInfo" class="muted"></span></div>
+        <div class="row2"><label>จำนวนที่มี (แก้ว)<input type="number" inputmode="numeric" id="cocoQty" min="0"></label><button class="sbtn" id="cocoOn">เปิดขาย</button><button class="sbtn ghost" id="cocoOff">ปิด</button></div>
+      </div>
+      <button class="wide sum2" id="sumBtn">📊 สรุปการขาย &amp; ปิดยอดวันนี้</button>
+    </div>
     <div class="sum"><div><div class="k">ออเดอร์วันนี้</div><div class="v" id="sOrders">0</div></div><div><div class="k">แก้ววันนี้</div><div class="v" id="sCups">0</div></div><div><div class="k">ยอดวันนี้</div><div class="v" id="sTotal">฿0</div></div></div>
     <div class="tabs" id="tabs">
       <button data-t="new" class="on">ใหม่<b id="c-new"></b></button>
@@ -75,6 +105,13 @@ header img{width:44px;image-rendering:pixelated}
     <div class="upd" id="upd"></div>
   </div>
 </div>
+<div class="modal" id="sumM"><div class="box">
+  <div style="font-family:var(--px);font-size:11px;color:var(--yellow);margin-bottom:12px">&gt; day_summary.txt</div>
+  <div id="sumBody"></div>
+  <label class="chk"><input type="checkbox" id="sumRecord" checked> บันทึกยอดขายเป็นรายรับในแอปบัญชี</label>
+  <div style="font-size:13px;opacity:.7;margin-top:6px">กดยืนยันแล้ว: ปิดรับออเดอร์วันนี้ + ส่งสรุปเข้า Telegram</div>
+  <div class="acts"><button class="x" style="flex:1" id="sumCancel">CANCEL</button><button class="go" style="flex:2" id="sumGo">ยืนยันปิดยอด</button></div>
+</div></div>
 <div class="toast" id="toast"></div>
 <script>
 const API='https://script.google.com/macros/s/AKfycbxCuTMM5xERPcApcj84-vxWli_Qy-lxFXugBDvqyeuYHRO0mKDEgvip37a__f-XuaQ7Fw/exec';
@@ -83,13 +120,14 @@ const LS={get(k,d){try{const v=localStorage.getItem('mha_'+k);return v==null?d:v
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hm=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 const LBL={new:'NEW',accepted:'MAKING',ready:'READY',done:'DONE',cancel:'CANCELLED'};
-let pin=LS.get('pin',''), tab='new', orders=[], known=null, busy=false;
+let user=LS.get('user',''), pin=LS.get('pin',''), tab='new', SHOP=null, orders=[], known=null, busy=false;
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
-async function api(action,p={}){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,pin},p))});const j=await r.json();if(!j.ok)throw new Error(j.error);return j.data}
-$('#loginBtn').onclick=async()=>{pin=$('#pin').value.trim();
-  try{await api('checkPin');LS.set('pin',pin);start()}catch(e){toast('PIN ไม่ถูกต้อง')}};
+async function api(action,p={}){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,user,pass:pin},p))});const j=await r.json();if(!j.ok)throw new Error(j.error);return j.data}
+$('#loginBtn').onclick=async()=>{user=$('#uid').value.trim();pin=$('#pin').value;
+  try{const r=await api('adminLogin');user=r.user;LS.set('user',user);LS.set('pin',pin);start()}catch(e){toast(e.message)}};
+$('#logout').onclick=()=>{LS.set('user','');LS.set('pin','');location.reload()};
 $('#pin').onkeydown=e=>{if(e.key==='Enter')$('#loginBtn').click()};
-function start(){$('#loginBox').style.display='none';$('#app').style.display='block';load();setInterval(()=>{if(!busy)load()},10000)}
+function start(){$('#loginBox').style.display='none';$('#app').style.display='block';$('#who').textContent=user;load();loadShop();setInterval(()=>{if(!busy){load();loadShop()}},10000)}
 $$('#tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;$$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));render()});
 let ctx;function beep(){try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();[0,.18,.36].forEach(t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.value=880+t*800;g.gain.value=.08;o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.12)})}catch(e){}if(navigator.vibrate)navigator.vibrate([200,100,200])}
 document.addEventListener('click',()=>{try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}},{once:true});
@@ -107,12 +145,12 @@ function render(){
   ['new','accepted','ready'].forEach(k=>{const n=orders.filter(o=>o.status===k).length;$('#c-'+k).textContent=n?n:''});
   let a=tab==='all'?orders.slice().reverse():orders.filter(o=>o.status===tab).sort((x,y)=>x.time.localeCompare(y.time));
   $('#list').innerHTML=a.length?a.map(o=>{
-    const items=(o.items||[]).map(x=>'<div class="it"><div><div class="a">'+(x.menu&&x.menu.indexOf('Biscoff Milk')===0?'🍪 ':'🍵 ')+esc(x.menu)+'</div><div class="b">'+esc([x.tone?'โทน'+x.tone:'',x.milk||'',x.topping?'+Biscoff':'','หวาน '+x.sweet].filter(Boolean).join(' · '))+'</div></div><div class="q">×'+x.qty+'</div></div>').join('')||'<div class="it"><div class="b">'+esc(o.itemsText)+'</div></div>';
+    const items=(o.items||[]).map(x=>'<div class="it"><div><div class="a">'+(x.menu==='Biscoff Milk'?'🍪 ':x.menu==='Matcha Coconut'?'🥥 ':'🍵 ')+esc(x.menu)+'</div><div class="b">'+esc([x.tone?'โทน'+x.tone:'',x.milk||'',x.topping?'+Biscoff':'','หวาน '+x.sweet].filter(Boolean).join(' · '))+'</div></div><div class="q">×'+x.qty+'</div></div>').join('')||'<div class="it"><div class="b">'+esc(o.itemsText)+'</div></div>';
     const act={new:'<button class="go" data-s="accepted" data-no="'+esc(o.no)+'">✓ รับออเดอร์</button><button class="x" data-s="cancel" data-no="'+esc(o.no)+'">ยกเลิก</button>',
       accepted:'<button class="ok" data-s="ready" data-no="'+esc(o.no)+'">ทำเสร็จแล้ว</button><button class="x" data-s="new" data-no="'+esc(o.no)+'">ย้อน</button>',
       ready:'<button class="ok" data-s="done" data-no="'+esc(o.no)+'">ลูกค้ารับแล้ว</button><button class="x" data-s="accepted" data-no="'+esc(o.no)+'">ย้อน</button>',
       done:'<button class="x" style="flex:1" data-s="ready" data-no="'+esc(o.no)+'">ย้อนสถานะ</button>',cancel:'<button class="x" style="flex:1" data-s="new" data-no="'+esc(o.no)+'">กู้คืนออเดอร์</button>'}[o.status]||'';
-    return '<div class="ord '+o.status+'"><div class="oh"><div><div class="no">#'+esc(o.no)+'</div><div class="nm">'+esc(o.name)+'</div><span class="badge '+o.status+'">'+(LBL[o.status]||o.status)+'</span></div><div class="tm">'+hm(o.time)+'<br>'+o.cups+' แก้ว</div></div>'+items+
+    return '<div class="ord '+o.status+'"><div class="oh"><div><div class="no">#'+esc(o.no)+'</div><div class="nm">'+esc(o.name)+'</div><span class="badge '+o.status+'">'+(LBL[o.status]||o.status)+'</span>'+(o.by?' <span style="font-size:12px;opacity:.6">· '+esc(o.by)+'</span>':'')+'</div><div class="tm">'+hm(o.time)+'<br>'+o.cups+' แก้ว</div></div>'+items+
       '<div class="tot"><span>TOTAL</span><span style="color:var(--yellow)">฿'+o.total+'</span></div><div class="acts">'+act+'</div></div>'}).join(''):'<div class="empty">ไม่มีออเดอร์</div>';
   $$('#list [data-s]').forEach(b=>b.onclick=async()=>{
     if(b.dataset.s==='cancel'&&!confirm('ยกเลิกออเดอร์ #'+b.dataset.no+' ?'))return;
@@ -121,7 +159,34 @@ function render(){
     catch(e){toast(e.message);render()}finally{busy=false}
   });
 }
-if(LS.get('pin',null)!==null){pin=LS.get('pin','');api('checkPin').then(start).catch(()=>{})}
+if(user){api('adminLogin').then(start).catch(()=>{})}
+/* ---- shop controls ---- */
+async function loadShop(){try{SHOP=await api('getShop');renderShop()}catch(e){}}
+function renderShop(){
+  if(!SHOP)return;
+  const p=$('#shopPill');p.textContent=SHOP.isOpen?'OPEN':'CLOSED';p.classList.toggle('off',!SHOP.isOpen);
+  if(document.activeElement!==$('#tOpen'))$('#tOpen').value=SHOP.open; if(document.activeElement!==$('#tClose'))$('#tClose').value=SHOP.close;
+  const t=$('#toggleClose');t.textContent=SHOP.closedToday?'เปิดรับออเดอร์อีกครั้ง':'ปิดรับออเดอร์วันนี้';t.classList.toggle('on',!SHOP.closedToday);
+  const L=SHOP.limited;
+  $('#cocoInfo').textContent=L.on?'· ขายแล้ว '+L.sold+'/'+L.limit+' · เหลือ '+L.left:'· ยังไม่เปิดขาย';
+  if(document.activeElement!==$('#cocoQty'))$('#cocoQty').value=L.on?L.limit:'';
+}
+async function setShop(patch,msg){busy=true;try{SHOP=await api('setShop',{shop:patch});renderShop();toast(msg||'บันทึกแล้ว ✓')}catch(e){toast(e.message)}finally{busy=false}}
+$('#saveTime').onclick=()=>setShop({open:$('#tOpen').value,close:$('#tClose').value},'ตั้งเวลารับออเดอร์แล้ว ✓');
+$('#toggleClose').onclick=()=>{const c=!SHOP.closedToday;if(c&&!confirm('ปิดรับออเดอร์วันนี้?'))return;setShop({closedToday:c},c?'ปิดรับออเดอร์แล้ว':'เปิดรับออเดอร์แล้ว')};
+$('#cocoOn').onclick=()=>{const q=+$('#cocoQty').value;if(!(q>0))return toast('ใส่จำนวนแก้วก่อนนะคะ');setShop({limitedQty:q},'เปิดขาย Matcha Coconut '+q+' แก้ว ✓')};
+$('#cocoOff').onclick=()=>setShop({limitedQty:0},'ปิดขาย Matcha Coconut แล้ว');
+$('#sumBtn').onclick=async()=>{busy=true;try{const r=await api('daySummary',{send:false});
+  $('#sumBody').innerHTML='<div style="font-size:15px;opacity:.8;margin-bottom:8px">'+r.date+'</div>'+Object.keys(r.byMenu).map(k=>'<div class="srow"><span>'+esc(k)+' × '+r.byMenu[k].qty+'</span><b>฿'+r.byMenu[k].amount.toLocaleString()+'</b></div>').join('')+
+   '<div class="srow" style="font-family:var(--px);font-size:11px;border:none;margin-top:6px"><span>'+r.orders+' ORDERS · '+r.cups+' CUPS</span><span style="color:var(--yellow)">฿'+r.total.toLocaleString()+'</span></div>'+
+   (r.pending?'<div style="color:var(--red);margin-top:8px">⚠ ยังมีออเดอร์ค้าง '+r.pending+' รายการ (ยังไม่ได้กด "ลูกค้ารับแล้ว")</div>':'');
+  $('#sumRecord').checked=!(SHOP&&SHOP.summarizedToday);
+  if(SHOP&&SHOP.summarizedToday)$('#sumBody').innerHTML+='<div style="margin-top:8px;opacity:.8">วันนี้บันทึกรายรับไปแล้ว จะไม่บันทึกซ้ำ</div>';
+  $('#sumM').style.display='flex'}catch(e){toast(e.message)}finally{busy=false}};
+$('#sumCancel').onclick=()=>$('#sumM').style.display='none';
+$('#sumGo').onclick=async()=>{busy=true;$('#sumGo').disabled=true;try{const r=await api('daySummary',{send:true,record:$('#sumRecord').checked});
+  $('#sumM').style.display='none';toast('ปิดยอดแล้ว'+(r.sent?' · ส่ง Telegram ✓':'')+(r.recorded?' · บันทึกรายรับ ✓':'')+(r.tgError?' · Telegram: '+r.tgError:''));loadShop()}
+  catch(e){toast(e.message)}finally{busy=false;$('#sumGo').disabled=false}};
 </script>
 </body>
 </html>

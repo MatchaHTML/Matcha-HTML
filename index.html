@@ -122,6 +122,9 @@ nav button.on{background:var(--navy);color:var(--yellow)}
 .modal{position:fixed;inset:0;background:rgba(10,20,50,.75);z-index:25;display:none;align-items:flex-end;justify-content:center}
 .modal .box{background:var(--navy);border-top:4px solid var(--cream);width:100%;max-width:560px;max-height:88vh;overflow:auto;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
 .tx .t{cursor:pointer}.tx .t .ed{font-family:var(--px);font-size:8px;color:var(--yellow);opacity:.7;margin-left:6px}
+.orderbtn{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;padding:16px;background:var(--yellow);color:var(--navy);text-decoration:none;font-size:17px;font-weight:600;box-shadow:4px 4px 0 var(--orange)}
+.orderbtn span:last-child{font-family:var(--px);font-size:10px;display:flex;align-items:center;gap:8px}
+.orderbtn b{background:var(--red);color:#fff;font-weight:normal;padding:4px 7px;display:none}
 .hint{font-size:13px;background:rgba(245,184,46,.12);border-left:4px solid var(--yellow);padding:10px 12px;margin:8px 0}
 </style>
 </head>
@@ -135,6 +138,7 @@ nav button.on{background:var(--navy);color:var(--yellow)}
 
   <!-- HOME -->
   <section id="home" class="on">
+    <a class="orderbtn" href="admin.html"><span>📥 รับออเดอร์ลูกค้า</span><span><b id="newCnt"></b> ADMIN &gt;</span></a>
     <h2>today</h2>
     <div class="muted" id="todayLabel"></div>
     <div class="grid2" style="margin-top:10px">
@@ -355,8 +359,14 @@ async function loadAll(){
     const st=await call('getSettings'); if(st){S=Object.assign({},DEFAULT,st);S.cost=Object.assign({},DEFAULT.cost,st.cost||{});if(!S.owners)S.owners=DEFAULT.owners;LS.set('settings',S)}
     TX=(await call('list'))||[];
   }catch(e){toast('โหลดข้อมูลไม่ได้: '+e.message)}finally{loading(false)}
-  setStatus(); renderHome();
+  setStatus(); renderHome(); checkOrders();
 }
+async function checkOrders(){
+  if(!api)return;
+  try{const r=await fetch(api,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'listOrders'})});const j=await r.json();
+    const n=(j.data||[]).filter(o=>o.status==='new').length, b=$('#newCnt');b.textContent=n+' ใหม่';b.style.display=n?'inline-block':'none';}catch(e){}
+}
+setInterval(()=>{if($('#home').classList.contains('on'))checkOrders()},30000);
 
 /* ===== HOME ===== */
 const sum=(arr,f)=>arr.reduce((a,x)=>a+(f?f(x):x),0);
