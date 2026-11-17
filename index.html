@@ -143,6 +143,8 @@ nav button.on{background:var(--navy);color:var(--yellow)}
       <div class="panel stat"><div class="k">กำไรเดือนนี้</div><div class="v y" id="mNet">0</div></div>
       <div class="panel stat"><div class="k">แก้วทั้งเดือน</div><div class="v" id="mCups">0</div></div>
     </div>
+    <h2>partners</h2>
+    <div class="panel" id="partners"></div>
     <h2>last 7 days</h2>
     <div class="panel"><div class="chart" id="chart"></div>
       <div class="legend"><span><i style="background:var(--green)"></i>รายรับ</span><span><i style="background:var(--orange)"></i>รายจ่าย</span></div></div>
@@ -156,8 +158,15 @@ nav button.on{background:var(--navy);color:var(--yellow)}
     <h2>new order</h2>
     <label>วันที่</label><input type="date" id="sDate">
     <div id="menuList" style="margin-top:12px"></div>
+    <div class="muted" style="margin-top:14px">💳 รายรับทั้งหมดเข้าบัญชีร้าน</div>
     <label>ชำระเงิน</label>
     <div class="seg" id="paySeg"><button data-v="เงินสด" class="on">เงินสด</button><button data-v="โอน">โอน / QR</button></div>
+    <div id="slipBox" style="display:none">
+      <label>สลิปโอนเงินจากลูกค้า</label>
+      <div class="scan" id="slipScan"><div class="big">[ 🧾 ATTACH SLIP ]</div><div class="muted" style="margin-top:8px">แนบสลิป AI จะอ่านยอด เวลา ชื่อผู้โอน แล้วตรวจให้</div><img id="slipImg" alt=""></div>
+      <input type="file" id="slipFile" accept="image/*" hidden>
+      <div class="panel" id="slipRes" style="display:none;margin-top:10px"></div>
+    </div>
     <label>หมายเหตุ (ไม่ใส่ก็ได้)</label><input id="sNote" placeholder="เช่น ชื่อลูกค้า">
     <div class="total"><span>TOTAL</span><b id="sTotal">฿0</b></div>
     <button class="btn green" id="sSave">SAVE ORDER &gt;</button>
@@ -178,6 +187,8 @@ nav button.on{background:var(--navy);color:var(--yellow)}
     <h2>expense</h2>
     <div class="row"><div><label>วันที่</label><input type="date" id="eDate"></div>
       <div><label>จำนวนเงิน (บาท)</label><input type="number" inputmode="decimal" id="eAmt" placeholder="0"></div></div>
+    <label>ใครออกเงิน</label>
+    <div class="seg ownSeg" id="eOwner"></div>
     <label>หมวด</label><select id="eCat"></select>
     <label>ร้าน / รายละเอียด</label><input id="eNote" placeholder="เช่น ผง Yame 100 g">
     <input type="hidden" id="eReceipt">
@@ -232,6 +243,13 @@ nav button.on{background:var(--navy);color:var(--yellow)}
     <div class="muted">ชื่อเมนู · ราคา · ฐานเครื่องดื่ม</div>
     <div id="menuEdit" style="margin-top:8px"></div>
     <button class="btn ghost" id="addMenu">+ ADD MENU</button>
+    <h2>shop bank</h2>
+    <div class="muted">ใช้ตรวจว่าสลิปโอนเข้าบัญชีร้านจริง</div>
+    <div class="row"><div><label>ชื่อบัญชี (ตามที่ขึ้นในสลิป)</label><input id="bankName" placeholder="เช่น นาย ก"></div>
+      <div><label>เลขบัญชี 4 ตัวท้าย</label><input id="bankLast" inputmode="numeric" maxlength="4" placeholder="1234"></div></div>
+    <h2>partners</h2>
+    <div class="muted">ชื่อหุ้นส่วน · % ส่วนแบ่งกำไร</div>
+    <div id="ownEdit" style="margin-top:8px"></div>
     <h2>goal</h2>
     <label>เป้าขายต่อวัน (แก้ว)</label><input type="number" inputmode="numeric" id="goalCups">
     <button class="btn" id="setSave">SAVE SETTINGS &gt;</button>
@@ -268,10 +286,12 @@ const CATS=['ผงมัทฉะ','นม','นมโอ๊ต','น้ำม�
 const DEFAULT={
   menus:[{name:'Matcha Latte',price:80,base:'milk'},{name:'Matcha Latte · Oat',price:85,base:'oat'},{name:'Matcha Coconut',price:100,base:'coco'}],
   cost:{matchaPerG:11,matchaG:4,milkPrice:104,milkVol:2000,oatPrice:110,oatVol:1000,cocoPrice:0,cocoVol:1000,baseMl:150,pack:5,extra:0,fixedMonth:0,targetMonth:15000,days:30},
-  goalCups:20
+  goalCups:20,
+  owners:[{name:'Pang',share:50},{name:'Kae',share:50}]
 };
 let S=Object.assign({},DEFAULT,LS.get('settings',{}));
 S.cost=Object.assign({},DEFAULT.cost,S.cost||{});
+if(!S.owners)S.owners=DEFAULT.owners;
 let TX=[];
 const DEFAULT_API='https://script.google.com/macros/s/AKfycbxCuTMM5xERPcApcj84-vxWli_Qy-lxFXugBDvqyeuYHRO0mKDEgvip37a__f-XuaQ7Fw/exec';
 let api=LS.get('api',DEFAULT_API), pin=LS.get('pin','');
@@ -290,6 +310,7 @@ function demo(action,p){
   if(action==='getSettings') return LS.get('settings',null);
   if(action==='saveSettings'){LS.set('settings',p.settings);return true}
   if(action==='scanReceipt') throw new Error('โหมด DEMO สแกนใบเสร็จไม่ได้ — ไปที่ ตั้งค่า แล้วเชื่อมต่อ Apps Script ก่อน');
+  if(action==='scanSlip') throw new Error('โหมด DEMO ตรวจสลิปไม่ได้ — ต้องเชื่อมต่อ Apps Script ก่อน');
   if(action==='checkPin') return true;
 }
 
@@ -303,7 +324,7 @@ $$('nav button').forEach(b=>b.onclick=()=>go(b.dataset.go));
 
 async function loadAll(){
   try{loading(true,'LOADING DATA...');
-    const st=await call('getSettings'); if(st){S=Object.assign({},DEFAULT,st);S.cost=Object.assign({},DEFAULT.cost,st.cost||{});LS.set('settings',S)}
+    const st=await call('getSettings'); if(st){S=Object.assign({},DEFAULT,st);S.cost=Object.assign({},DEFAULT.cost,st.cost||{});if(!S.owners)S.owners=DEFAULT.owners;LS.set('settings',S)}
     TX=(await call('list'))||[];
   }catch(e){toast('โหลดข้อมูลไม่ได้: '+e.message)}finally{loading(false)}
   setStatus(); renderHome();
@@ -325,6 +346,7 @@ function renderHome(){
   const g=+S.goalCups||20, c=cups(td), f=Math.min(10,Math.round(c/g*10));
   $('#goalTxt').textContent=c+' / '+g+' แก้ว ('+Math.min(100,Math.round(c/g*100))+'%)';
   $('#goalBar').innerHTML=Array.from({length:10},(_,i)=>'<i class="'+(i<f?'f':'')+'"></i>').join('');
+  renderPartners(md,inc(md)-exp(md));
   // chart
   const days=[...Array(7)].map((_,i)=>{const x=new Date();x.setDate(x.getDate()-6+i);return ymd(x)});
   const vals=days.map(k=>{const a=TX.filter(x=>x.date===k);return [inc(a),exp(a)]});
@@ -335,31 +357,87 @@ function renderHome(){
   const top=Object.entries(agg).sort((a,b)=>b[1]-a[1]);
   $('#topMenu').innerHTML=top.length?top.map(([n,q],i)=>'<div class="tx"><div>'+(i+1)+'. '+esc(n)+'</div><div class="a in">'+q+' แก้ว</div></div>').join(''):'<div class="muted">ยังไม่มีข้อมูลเดือนนี้</div>';
 }
+function renderPartners(md,P){
+  const tot=sum(S.owners,o=>+o.share||0)||1;
+  const H=sum(md.filter(x=>x.type==='income'),x=>+x.amount), Es=sum(md.filter(x=>x.type==='expense'&&(!x.owner||x.owner==='บัญชีร้าน')),x=>+x.amount);
+  const rows=S.owners.map(o=>{const paid=sum(md.filter(x=>x.type==='expense'&&x.owner===o.name),x=>+x.amount),share=P*(+o.share||0)/tot;return {o,paid,share,get:paid+share}});
+  let h='<div class="tx"><div>เงินเข้าบัญชีร้าน</div><div class="a in">'+fmt(H)+'</div></div>'+
+    '<div class="tx"><div>จ่ายจากบัญชีร้าน</div><div class="a out">'+fmt(Es)+'</div></div>'+
+    '<div class="tx"><div>คงเหลือในบัญชีร้าน</div><div class="a" style="color:var(--yellow)">'+fmt(H-Es)+'</div></div>';
+  h+='<table style="margin-top:10px"><tr><th></th>'+rows.map(r=>'<th>'+esc(r.o.name)+'</th>').join('')+'</tr>'+
+   '<tr><td>ออกเงินส่วนตัว</td>'+rows.map(r=>'<td style="color:var(--red)">'+fmt(r.paid)+'</td>').join('')+'</tr>'+
+   '<tr><td>ส่วนแบ่งกำไร</td>'+rows.map(r=>'<td style="color:var(--yellow)">'+fmt(r.share)+'<div style="font-size:11px;opacity:.6">'+(+r.o.share||0)+'%</div></td>').join('')+'</tr>'+
+   '<tr><td style="font-weight:600">ได้รับจากบัญชีร้าน</td>'+rows.map(r=>'<td style="font-weight:600;color:'+(r.get<0?'var(--red)':'var(--green)')+'">'+fmt(r.get)+'</td>').join('')+'</tr></table>';
+  h+='<div style="margin-top:12px;font-size:14px"><span style="font-family:var(--px);font-size:9px;color:var(--orange)">&gt; settle:</span><br>'+rows.map(r=>r.get>=0?'บัญชีร้านโอนให้ '+esc(r.o.name)+' <b style="color:var(--yellow)">'+fmt(r.get)+'</b>':esc(r.o.name)+' โอนเข้าบัญชีร้าน <b style="color:var(--red)">'+fmt(-r.get)+'</b>').join('<br>')+'</div>';
+  h+='<div class="muted" style="margin-top:8px">ได้รับ = เงินที่ออกไปก่อน (คืนให้) + ส่วนแบ่งกำไร</div>';
+  $('#partners').innerHTML=h;
+}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
 /* ===== SELL ===== */
-let cart={}, pay='เงินสด';
+let cart={}, pay='เงินสด', sOwn=0, eOwn=0;
+function ownSeg(el,cur,set,withShop){const list=S.owners.map(o=>o.name).concat(withShop?['บัญชีร้าน']:[]);el.innerHTML=list.map((n,i)=>'<button data-i="'+i+'" class="'+(i===cur?'on':'')+'">'+esc(n)+'</button>').join('');
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{set(+b.dataset.i);el.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))})}
 function renderSell(){
   if(!$('#sDate').value)$('#sDate').value=TODAY();
   $('#menuList').innerHTML=S.menus.map((m,i)=>'<div class="menu'+(cart[i]?' has':'')+'"><div><div class="n">'+esc(m.name)+'</div><div class="p">฿'+m.price+'</div></div><div class="qty"><button data-i="'+i+'" data-d="-1">−</button><span>'+(cart[i]||0)+'</span><button data-i="'+i+'" data-d="1">+</button></div></div>').join('');
   $$('#menuList .qty button').forEach(b=>b.onclick=()=>{const i=b.dataset.i;cart[i]=Math.max(0,(cart[i]||0)+ +b.dataset.d);renderSell()});
-  $('#sTotal').textContent=fmt(sum(Object.entries(cart),([i,q])=>q*(+S.menus[i].price)));
+  $('#sTotal').textContent=fmt(cartTotal());
+  if(slip)renderSlip();
 }
-$$('#paySeg button').forEach(b=>b.onclick=()=>{pay=b.dataset.v;$$('#paySeg button').forEach(x=>x.classList.toggle('on',x===b))});
+$$('#paySeg button').forEach(b=>b.onclick=()=>{pay=b.dataset.v;$$('#paySeg button').forEach(x=>x.classList.toggle('on',x===b));$('#slipBox').style.display=pay==='โอน'?'block':'none'});
+let slip=null, noSlipArmed=0;
+$('#slipScan').onclick=()=>$('#slipFile').click();
+$('#slipFile').onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return; e.target.value='';
+  try{const {b64,url}=await shrink(f,1400,.85);$('#slipImg').src=url;$('#slipImg').style.display='block';
+    loading(true,'CHECKING SLIP...');
+    slip=await call('scanSlip',{image:b64,mime:'image/jpeg'});renderSlip();
+  }catch(err){toast(err.message)}finally{loading(false)}
+};
+function cartTotal(){return sum(Object.entries(cart),([i,q])=>q*(+S.menus[i].price))}
+function slipChecks(){
+  if(!slip)return [];
+  const b=S.bank||{}, recv=((slip.receiver_name||'')+' '+(slip.receiver_account||'')).toLowerCase();
+  const last=(b.last4||'').replace(/\D/g,''), nm=(b.name||'').toLowerCase().trim();
+  const recvOk=(!last&&!nm)?null:((last&&recv.replace(/\D/g,'').includes(last))||(nm&&recv.includes(nm)));
+  const tot=cartTotal(), d=String(slip.datetime||'').slice(0,10);
+  return [
+    ['ยอดเงินตรงกับออเดอร์ ('+fmt(tot)+')', tot>0?Math.abs((+slip.amount||0)-tot)<0.01:null],
+    ['โอนเข้าบัญชีร้าน', recvOk],
+    ['วันที่โอนตรงกับวันขาย', d?d===($('#sDate').value||TODAY()):null],
+    ['สลิปนี้ยังไม่เคยใช้', slip.ref?!slip.duplicate:null]
+  ];
+}
+function renderSlip(){
+  if(!slip){$('#slipRes').style.display='none';return}
+  const ck=slipChecks(), bad=ck.some(c=>c[1]===false);
+  $('#slipRes').innerHTML='<div style="font-family:var(--px);font-size:9px;color:'+(bad?'var(--red)':'var(--green)')+'">&gt; slip_check: '+(bad?'WARNING':'OK')+'</div>'+
+   '<div class="tx"><div>ยอดโอน</div><div class="a in">'+fmt2(+slip.amount||0)+' ฿</div></div>'+
+   '<div class="tx"><div>ผู้โอน</div><div>'+esc(slip.sender_name||'-')+' <span class="muted">'+esc(slip.sender_bank||'')+'</span></div></div>'+
+   '<div class="tx"><div>ผู้รับ</div><div>'+esc(slip.receiver_name||'-')+' <span class="muted">'+esc(slip.receiver_account||'')+'</span></div></div>'+
+   '<div class="tx"><div>เวลา</div><div>'+esc(slip.datetime||'-')+'</div></div>'+
+   '<div class="tx"><div>เลขอ้างอิง</div><div style="font-size:12px">'+esc(slip.ref||'-')+'</div></div>'+
+   ck.map(c=>'<div style="margin-top:6px;color:'+(c[1]===true?'var(--green)':c[1]===false?'var(--red)':'var(--cream)')+'">'+(c[1]===true?'✓ ':c[1]===false?'✗ ':'? ')+c[0]+(c[1]===null?' <span class="muted">(ตรวจไม่ได้)</span>':'')+'</div>').join('')+
+   '<div class="muted" style="margin-top:10px">AI ตรวจจากรูปสลิปเท่านั้น ควรเช็กยอดเงินเข้าในแอปธนาคารร้านด้วยทุกครั้ง</div>';
+  $('#slipRes').style.display='block';
+}
 $('#sSave').onclick=async()=>{
   const lines=Object.entries(cart).filter(([i,q])=>q>0);
   if(!lines.length)return toast('ยังไม่ได้เลือกเมนู');
+  if(pay==='โอน'&&!slip){const n=Date.now();if(n-noSlipArmed>4000){noSlipArmed=n;return toast('ยังไม่ได้แนบสลิป กด SAVE อีกครั้งถ้าจะบันทึกโดยไม่มีสลิป')}}
   loading(true,'SAVING ORDER...');
   try{for(const [i,q] of lines){const m=S.menus[i];
-      const tx={date:$('#sDate').value||TODAY(),type:'income',category:'ขาย',menu:m.name,qty:q,amount:q*(+m.price),payment:pay,note:$('#sNote').value};
+      const tx={date:$('#sDate').value||TODAY(),type:'income',category:'ขาย',menu:m.name,qty:q,amount:q*(+m.price),payment:pay,note:[$('#sNote').value,slip&&slip.sender_name?'โอนจาก '+slip.sender_name:''].filter(Boolean).join(' · '),owner:'',receiptUrl:slip?slip.receiptUrl:'',slipRef:slip?slip.ref:''};
       const r=await call('add',{tx});TX.push(Object.assign({id:r.id},tx));}
-    cart={};$('#sNote').value='';renderSell();toast('บันทึกการขายแล้ว ✓');
+    cart={};slip=null;$('#slipImg').style.display='none';$('#slipRes').style.display='none';$('#sNote').value='';renderSell();toast('บันทึกการขายแล้ว ✓');
   }catch(e){toast('บันทึกไม่ได้: '+e.message)}finally{loading(false)}
 };
 
 /* ===== SPEND + SCAN ===== */
 $('#eCat').innerHTML=CATS.map(c=>'<option>'+c+'</option>').join('');
 $('#eDate').value=TODAY();
+setTimeout(()=>ownSeg($('#eOwner'),eOwn,v=>eOwn=v,true));
 $('#scanBox').onclick=()=>$('#scanFile').click();
 $('#scanFile').onchange=async e=>{
   const f=e.target.files[0]; if(!f)return; e.target.value='';
@@ -384,7 +462,7 @@ function shrink(file,max,q){return new Promise((res,rej)=>{const img=new Image()
   const url=c.toDataURL('image/jpeg',q);res({url,b64:url.split(',')[1]})};img.onerror=()=>rej(new Error('เปิดรูปไม่ได้'));img.src=URL.createObjectURL(file)})}
 $('#eSave').onclick=async()=>{
   const amt=+$('#eAmt').value; if(!(amt>0))return toast('ใส่จำนวนเงินก่อนนะคะ');
-  const tx={date:$('#eDate').value||TODAY(),type:'expense',category:$('#eCat').value,menu:'',qty:0,amount:amt,payment:'',note:$('#eNote').value,receiptUrl:$('#eReceipt').value};
+  const tx={date:$('#eDate').value||TODAY(),type:'expense',category:$('#eCat').value,menu:'',qty:0,amount:amt,payment:'',note:$('#eNote').value,receiptUrl:$('#eReceipt').value,owner:(S.owners[eOwn]||{name:'บัญชีร้าน'}).name};
   loading(true,'SAVING...');
   try{const r=await call('add',{tx});TX.push(Object.assign({id:r.id},tx));
     $('#eAmt').value='';$('#eNote').value='';$('#eReceipt').value='';$('#scanResult').style.display='none';$('#scanImg').style.display='none';
@@ -423,7 +501,7 @@ function renderLog(){
   const a=TX.filter(x=>String(x.date).slice(0,7)===m&&(!t||x.type===t)).sort((x,y)=>(y.date+(y.createdAt||'')).localeCompare(x.date+(x.createdAt||'')));
   $('#lIn').textContent=fmt(sum(a.filter(x=>x.type==='income'),x=>+x.amount));
   $('#lOut').textContent=fmt(sum(a.filter(x=>x.type==='expense'),x=>+x.amount));
-  $('#lList').innerHTML=a.length?a.map(x=>'<div class="tx"><div><div>'+esc(x.type==='income'?(x.menu+' ×'+x.qty):x.category)+'</div><div class="s">'+thDate(x.date)+(x.payment?' · '+esc(x.payment):'')+(x.note?' · '+esc(x.note):'')+(x.receiptUrl?' · <a href="'+esc(x.receiptUrl)+'" target="_blank">ใบเสร็จ</a>':'')+'</div></div><div style="display:flex;align-items:flex-start"><span class="a '+(x.type==='income'?'in':'out')+'">'+(x.type==='income'?'+':'−')+fmt2(+x.amount)+'</span><button class="del" data-id="'+esc(x.id)+'">✕</button></div></div>').join(''):'<div class="muted" style="padding:14px 0">ไม่มีรายการ</div>';
+  $('#lList').innerHTML=a.length?a.map(x=>'<div class="tx"><div><div>'+esc(x.type==='income'?(x.menu+' ×'+x.qty):x.category)+'</div><div class="s">'+thDate(x.date)+(x.owner?' · '+esc(x.owner):'')+(x.payment?' · '+esc(x.payment):'')+(x.note?' · '+esc(x.note):'')+(x.receiptUrl?' · <a href="'+esc(x.receiptUrl)+'" target="_blank">'+(x.type==='income'?'สลิป':'ใบเสร็จ')+'</a>':'')+'</div></div><div style="display:flex;align-items:flex-start"><span class="a '+(x.type==='income'?'in':'out')+'">'+(x.type==='income'?'+':'−')+fmt2(+x.amount)+'</span><button class="del" data-id="'+esc(x.id)+'">✕</button></div></div>').join(''):'<div class="muted" style="padding:14px 0">ไม่มีรายการ</div>';
   $$('#lList .del').forEach(b=>b.onclick=async()=>{
     if(!confirmDel())return;
     loading(true,'DELETING...');
@@ -433,7 +511,7 @@ let delArmed=0;function confirmDel(){const n=Date.now();if(n-delArmed<3000){delA
 $('#lMonth').onchange=renderLog;$('#lType').onchange=renderLog;
 $('#lCsv').onclick=()=>{
   const m=$('#lMonth').value,a=TX.filter(x=>String(x.date).slice(0,7)===m);
-  const h=['date','type','category','menu','qty','amount','payment','note'];
+  const h=['date','type','category','menu','qty','amount','payment','owner','note','slipRef','receiptUrl'];
   const csv='﻿'+h.join(',')+'\n'+a.map(x=>h.map(k=>'"'+String(x[k]??'').replace(/"/g,'""')+'"').join(',')).join('\n');
   const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));l.download='matcha_'+m+'.csv';l.click();
 };
@@ -441,8 +519,11 @@ $('#lCsv').onclick=()=>{
 /* ===== SETTINGS ===== */
 function renderSet(){
   $('#apiUrl').value=api;$('#pin').value=pin;$('#goalCups').value=S.goalCups;
+  $('#bankName').value=(S.bank||{}).name||'';$('#bankLast').value=(S.bank||{}).last4||'';
   $('#menuEdit').innerHTML=S.menus.map((m,i)=>'<div class="row" style="margin-bottom:8px;align-items:center"><input style="flex:2.2" value="'+esc(m.name)+'" data-mi="'+i+'" data-k="name"><input style="flex:1" type="number" value="'+m.price+'" data-mi="'+i+'" data-k="price"><select style="flex:1.4" data-mi="'+i+'" data-k="base">'+[['milk','นมสด'],['oat','โอ๊ต'],['coco','มะพร้าว'],['none','อื่นๆ']].map(([v,t])=>'<option value="'+v+'"'+(m.base===v?' selected':'')+'>'+t+'</option>').join('')+'</select><button class="del" style="opacity:.7;flex:0 0 28px" data-rm="'+i+'">✕</button></div>').join('');
   $$('#menuEdit [data-mi]').forEach(el=>el.oninput=el.onchange=()=>{const m=S.menus[el.dataset.mi];m[el.dataset.k]=el.dataset.k==='price'?+el.value:el.value});
+  $('#ownEdit').innerHTML=S.owners.map((o,i)=>'<div class="row" style="margin-bottom:8px"><input style="flex:2" value="'+esc(o.name)+'" data-oi="'+i+'" data-k="name"><input style="flex:1" type="number" value="'+o.share+'" data-oi="'+i+'" data-k="share"></div>').join('');
+  $$('#ownEdit [data-oi]').forEach(el=>el.oninput=()=>{S.owners[el.dataset.oi][el.dataset.k]=el.dataset.k==='share'?+el.value:el.value});
   $$('#menuEdit [data-rm]').forEach(b=>b.onclick=()=>{S.menus.splice(+b.dataset.rm,1);renderSet()});
 }
 $('#addMenu').onclick=()=>{S.menus.push({name:'เมนูใหม่',price:80,base:'milk'});renderSet()};
@@ -454,7 +535,7 @@ $('#connBtn').onclick=async()=>{
   else toast('ใช้โหมด DEMO');
   setStatus();loadAll();
 };
-$('#setSave').onclick=()=>{S.goalCups=+$('#goalCups').value||20;saveSettings()};
+$('#setSave').onclick=()=>{S.goalCups=+$('#goalCups').value||20;S.bank={name:$('#bankName').value.trim(),last4:$('#bankLast').value.trim()};saveSettings()};
 async function saveSettings(){
   LS.set('settings',S);
   loading(true,'SAVING SETTINGS...');
