@@ -94,9 +94,7 @@ input.name:focus{border-color:var(--yellow)}
   <div class="step" id="s-menu">
     <div class="q">step: select_menu</div>
     <div class="qt">เลือกเมนู</div>
-    <button class="big" data-menu="มัทฉะ"><span class="ic">🍵</span><span style="flex:1">Matcha Cold Whisk<small>มัทฉะตีเย็น</small></span><span class="pr">฿80</span></button>
-    <button class="big" data-menu="Matcha Coconut" id="cocoBtn" style="display:none"><span class="ic">🥥</span><span style="flex:1">Matcha Coconut<small id="cocoLeft">มัทฉะมะพร้าว · มีจำนวนจำกัด</small></span><span class="pr">฿100</span></button>
-    <button class="big" data-menu="Biscoff Milk"><span class="ic">🍪</span><span style="flex:1">Biscoff Milk<small>บิสคอฟมิลค์</small></span><span class="pr">฿60</span></button>
+    <div id="menuBtns"></div>
     <button class="back" data-back>&lt; BACK</button>
   </div>
 
@@ -114,15 +112,15 @@ input.name:focus{border-color:var(--yellow)}
     <div class="q">step: select_milk</div>
     <div class="qt">เลือกนม</div>
     <button class="big" data-milk="นมวัว"><span class="ic">🐄</span><span style="flex:1">นมวัว<small>Fresh milk</small></span><span class="pr">+฿0</span></button>
-    <button class="big" data-milk="นมโอ๊ต"><span class="ic">🌾</span><span style="flex:1">นมโอ๊ต<small>Oat milk</small></span><span class="pr">+฿5</span></button>
+    <button class="big" data-milk="นมโอ๊ต"><span class="ic">🌾</span><span style="flex:1">นมโอ๊ต<small>Oat milk</small></span><span class="pr" id="oatPr">+฿5</span></button>
     <button class="back" data-back>&lt; BACK</button>
   </div>
 
   <!-- topping -->
   <div class="step" id="s-top">
     <div class="q">step: add_on</div>
-    <div class="qt">เพิ่ม Biscoff ไหม?</div>
-    <button class="big" data-top="1"><span class="ic">🍪</span><span style="flex:1">เพิ่ม Biscoff<small>Add Biscoff</small></span><span class="pr">+฿5</span></button>
+    <div class="qt" id="topQ">เพิ่ม Biscoff ไหม?</div>
+    <button class="big" data-top="1"><span class="ic">➕</span><span style="flex:1" id="topYes">เพิ่ม Biscoff<small>Add-on</small></span><span class="pr" id="topPr">+฿5</span></button>
     <button class="big" data-top="0"><span class="ic">🙅</span><span style="flex:1">ไม่เพิ่ม<small>No thanks</small></span><span class="pr">+฿0</span></button>
     <button class="back" data-back>&lt; BACK</button>
   </div>
@@ -178,10 +176,26 @@ input.name:focus{border-color:var(--yellow)}
 const API='https://script.google.com/macros/s/AKfycbxCuTMM5xERPcApcj84-vxWli_Qy-lxFXugBDvqyeuYHRO0mKDEgvip37a__f-XuaQ7Fw/exec';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const STEPS=['s-name','s-menu','s-tone','s-milk','s-top','s-sweet','s-qty','s-cart','s-done'];
-const PRICE={'มัทฉะ':80,'Biscoff Milk':60,'Matcha Coconut':100}, OAT=5, TOP=5;
+const DEF={oatPrice:5,toppingPrice:5,toppingName:'Biscoff',menus:[
+  {name:'Matcha Cold Whisk',sub:'มัทฉะตีเย็น',icon:'🍵',price:80,tone:true,milk:true,topping:true,active:true,available:true},
+  {name:'Biscoff Milk',sub:'บิสคอฟมิลค์',icon:'🍪',price:60,active:true,available:true}]};
 let SHOP=null;
-const cocoInCart=()=>cart.filter(x=>x.menu==='Matcha Coconut').reduce((a,x)=>a+x.qty,0);
-const unit=x=>PRICE[x.menu]+(x.milk==='นมโอ๊ต'?OAT:0)+(x.topping?TOP:0), line=x=>unit(x)*x.qty, total=()=>cart.reduce((a,x)=>a+line(x),0);
+const CFG=()=>SHOP||DEF, M=n=>CFG().menus.find(m=>m.name===n)||{price:0};
+const inCart=n=>cart.filter(x=>x.menu===n).reduce((a,x)=>a+x.qty,0);
+const maxQty=n=>{const m=M(n);return m.limited?Math.max(0,(m.left||0)-inCart(n)):20};
+const unit=x=>(+M(x.menu).price||0)+(x.milk==='นมโอ๊ต'?CFG().oatPrice:0)+(x.topping?CFG().toppingPrice:0), line=x=>unit(x)*x.qty, total=()=>cart.reduce((a,x)=>a+line(x),0);
+function renderMenus(){
+  const c=CFG();
+  $('#menuBtns').innerHTML=c.menus.filter(m=>m.active&&(!m.limited||m.on)).map(m=>{const out=m.limited&&!(maxQty(m.name)>0);
+    return '<button class="big" data-menu="'+esc(m.name)+'"'+(out?' style="opacity:.45"':'')+'><span class="ic">'+esc(m.icon||'🍵')+'</span><span style="flex:1">'+esc(m.name)+'<small>'+esc(m.sub||'')+(m.limited?' · '+(out?'หมดแล้ว':'เหลือ '+maxQty(m.name)+' แก้ว'):'')+'</small></span><span class="pr">฿'+m.price+'</span></button>'}).join('')||'<div class="hint">วันนี้ยังไม่มีเมนู</div>';
+  $$('#menuBtns [data-menu]').forEach(b=>b.onclick=()=>pickMenu(b.dataset.menu));
+  $('#oatPr').textContent='+฿'+c.oatPrice;$('#topPr').textContent='+฿'+c.toppingPrice;
+  $('#topQ').textContent='เพิ่ม '+c.toppingName+' ไหม?';$('#topYes').innerHTML='เพิ่ม '+esc(c.toppingName)+'<small>Add-on</small>';
+}
+function nextStep(after){const m=M(cur.menu);const order=['tone','milk','top'];let i=order.indexOf(after)+1;
+  for(;i<order.length;i++){const k=order[i];if((k==='tone'&&m.tone)||(k==='milk'&&m.milk)||(k==='top'&&m.topping))return show('s-'+k)}
+  show('s-sweet')}
+function pickMenu(n){if(maxQty(n)<1)return toast(n+' หมดแล้วค่ะ');cur={menu:n};nextStep(null)}
 let name='', cart=[], cur={}, hist=[], qty=1, lastImg='', lastNo='';
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2800)}
 function show(id,push=true){
@@ -199,27 +213,24 @@ $('#name').oninput=()=>{$('#nameNext').disabled=!$('#name').value.trim()};
 $('#name').onkeydown=e=>{if(e.key==='Enter'&&$('#name').value.trim())$('#nameNext').click()};
 $('#nameNext').onclick=()=>{name=$('#name').value.trim();try{localStorage.setItem('mh_name',name)}catch(e){}show('s-menu')};
 /* 2 menu */
-$$('[data-menu]').forEach(b=>b.onclick=()=>{cur={menu:b.dataset.menu};
-  if(cur.menu==='Matcha Coconut'&&cocoMax()<1)return toast('Matcha Coconut หมดแล้วค่ะ');
-  show(cur.menu==='Biscoff Milk'?'s-sweet':'s-tone')});
-function cocoMax(){return SHOP&&SHOP.limited.available?SHOP.limited.left-cocoInCart():0}
+
 /* 3 tone */
-$$('[data-tone]').forEach(b=>b.onclick=()=>{cur.tone=b.dataset.tone;show(cur.menu==='Matcha Coconut'?'s-sweet':'s-milk')});
-$$('[data-milk]').forEach(b=>b.onclick=()=>{cur.milk=b.dataset.milk;show('s-top')});
-$$('[data-top]').forEach(b=>b.onclick=()=>{cur.topping=b.dataset.top==='1';show('s-sweet')});
+$$('[data-tone]').forEach(b=>b.onclick=()=>{cur.tone=b.dataset.tone;nextStep('tone')});
+$$('[data-milk]').forEach(b=>b.onclick=()=>{cur.milk=b.dataset.milk;nextStep('milk')});
+$$('[data-top]').forEach(b=>b.onclick=()=>{cur.topping=b.dataset.top==='1';nextStep('top')});
 /* 4 sweet */
 $('#sweetGrid').innerHTML=Array.from({length:10},(_,i)=>'<button class="num" data-s="'+(i+1)+'">'+(i+1)+'</button>').join('');
 $$('[data-s]').forEach(b=>b.onclick=()=>{cur.sweet=+b.dataset.s;qty=1;$('#qVal').textContent=1;
   $('#qtyWhat').textContent=label(cur);show('s-qty')});
 /* 5 qty */
 $('#qMinus').onclick=()=>{qty=Math.max(1,qty-1);$('#qVal').textContent=qty};
-$('#qPlus').onclick=()=>{const mx=cur.menu==='Matcha Coconut'?cocoMax():20;if(qty>=mx)return toast(cur.menu==='Matcha Coconut'?'Matcha Coconut เหลือ '+mx+' แก้ว':'สั่งได้สูงสุด 20 แก้ว');qty++;$('#qVal').textContent=qty};
+$('#qPlus').onclick=()=>{const mx=maxQty(cur.menu);if(qty>=mx)return toast(M(cur.menu).limited?cur.menu+' เหลือ '+mx+' แก้ว':'สั่งได้สูงสุด 20 แก้ว');qty++;$('#qVal').textContent=qty};
 $('#qtyNext').onclick=()=>{cart.push(Object.assign({},cur,{qty}));hist=[];renderCart();show('s-cart',false)};
 /* 6 cart */
-function label(x){return dispName(x)+(x.tone?' · โทน'+x.tone:'')+(x.milk?' · '+x.milk:'')+(x.topping?' · +Biscoff':'')+' · หวาน '+x.sweet+' · ฿'+unit(x)+'/แก้ว'}
-function dispName(x){return x.menu==='มัทฉะ'?'Matcha Cold Whisk':x.menu}
-const icon=x=>x.menu==='Biscoff Milk'?'🍪 ':x.menu==='Matcha Coconut'?'🥥 ':'🍵 ';
-function detail(x){return [x.tone?'โทน'+x.tone:'',x.milk||'',x.topping?'+Biscoff':'','หวาน '+x.sweet+'/10'].filter(Boolean).join(' · ')}
+function label(x){return dispName(x)+(x.tone?' · โทน'+x.tone:'')+(x.milk?' · '+x.milk:'')+(x.topping?' · +'+CFG().toppingName:'')+' · หวาน '+x.sweet+' · ฿'+unit(x)+'/แก้ว'}
+function dispName(x){return x.menu}
+const icon=x=>(M(x.menu).icon||'🍵')+' ';
+function detail(x){return [x.tone?'โทน'+x.tone:'',x.milk||'',x.topping?'+'+CFG().toppingName:'','หวาน '+x.sweet+'/10'].filter(Boolean).join(' · ')}
 function renderCart(){
   $('#cartWho').textContent='ชื่อผู้สั่ง: '+name;
   $('#cartList').innerHTML=cart.map((x,i)=>'<div class="item"><div><div class="n">'+icon(x)+esc(dispName(x))+'</div><div class="d">'+esc(detail(x))+'</div></div><div style="text-align:right"><div class="x">×'+x.qty+'</div><div class="x" style="margin-top:8px;color:var(--cream)">฿'+line(x)+'</div><button class="rm" data-rm="'+i+'">✕</button></div></div>').join('')||'<div class="hint">ยังไม่มีรายการ</div>';
@@ -292,7 +303,7 @@ $('#saveImg').onclick=async()=>{
 };
 $('#newOrder').onclick=()=>{cart=[];cur={};hist=[];show('s-menu',false);$('#prog').innerHTML=$('#prog').innerHTML};
 async function loadShop(){
-  if(!API){show('s-name',false);return}
+  if(!API){renderMenus();show('s-name',false);return}
   try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'getShop'})});
     const j=await r.json(); if(!j.ok)throw new Error(j.error); SHOP=j.data;
   }catch(e){SHOP=null}
@@ -301,9 +312,7 @@ async function loadShop(){
     $('#closedSub').textContent=SHOP.reason==='before'?'เปิดรับออเดอร์ '+SHOP.open+' – '+SHOP.close+' น.':'เวลารับออเดอร์ '+SHOP.open+' – '+SHOP.close+' น. · แล้วพบกันใหม่นะคะ 💚';
     show('s-closed',false);return false;
   }
-  const L=SHOP&&SHOP.limited;
-  $('#cocoBtn').style.display=L&&L.on?'flex':'none';
-  if(L&&L.on){$('#cocoLeft').textContent=L.left>0?'มัทฉะมะพร้าว · เหลือ '+L.left+' แก้ว':'มัทฉะมะพร้าว · หมดแล้ว';$('#cocoBtn').style.opacity=L.left>0?1:.45}
+  renderMenus();
   if(!$$('.step').some(x=>x.classList.contains('on')&&x.id!=='s-closed'))show('s-name',false);
   return true;
 }

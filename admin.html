@@ -63,6 +63,17 @@ header img{width:44px;image-rendering:pixelated}
 .wide{display:block;width:100%;margin-top:10px;padding:13px;border:3px solid var(--cream);background:transparent;font-weight:600;font-size:16px;cursor:pointer}
 .wide.on{background:var(--red);border-color:var(--red);color:var(--navy)}
 .wide.sum2{background:var(--yellow);color:var(--navy);border-color:var(--yellow);box-shadow:4px 4px 0 var(--orange)}
+.mcard{background:var(--navy2);border:3px solid rgba(255,244,220,.3);padding:12px;margin-bottom:10px}
+.mcard.off{opacity:.55}
+.mcard .r{display:flex;gap:8px;margin-top:8px}
+.mcard input{width:100%;padding:9px;font-size:16px;background:var(--cream);color:var(--navy);border:none}
+.tg{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tg button{padding:7px 10px;border:2px solid rgba(255,244,220,.5);background:transparent;font-size:14px;cursor:pointer}
+.tg button.on{background:var(--green);border-color:var(--green);color:var(--navy);font-weight:600}
+.tg button.del{margin-left:auto;border-color:var(--red);color:var(--red)}
+.srow2{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px dashed rgba(255,244,220,.25)}
+.srow2 .n{flex:1;font-size:15px}.srow2 .n small{display:block;opacity:.7;font-size:12px}
+.srow2 input{width:70px;padding:8px;font-size:16px;background:var(--cream);color:var(--navy);border:none}
 .coco{border-top:1px dashed rgba(255,244,220,.3);margin-top:12px;padding-top:10px}
 .sh2{font-size:15px;font-weight:600;margin-bottom:6px}.muted{opacity:.7;font-weight:400;font-size:13px}
 .modal{position:fixed;inset:0;background:rgba(10,20,50,.8);z-index:30;display:none;align-items:flex-end;justify-content:center}
@@ -89,9 +100,10 @@ header img{width:44px;image-rendering:pixelated}
       <div class="row2"><label>เปิดรับ<input type="time" id="tOpen"></label><label>ปิดรับ<input type="time" id="tClose"></label><button class="sbtn" id="saveTime">SAVE</button></div>
       <button class="wide" id="toggleClose">ปิดรับออเดอร์วันนี้</button>
       <div class="coco">
-        <div class="sh2">🥥 Matcha Coconut วันนี้ <span id="cocoInfo" class="muted"></span></div>
-        <div class="row2"><label>จำนวนที่มี (แก้ว)<input type="number" inputmode="numeric" id="cocoQty" min="0"></label><button class="sbtn" id="cocoOn">เปิดขาย</button><button class="sbtn ghost" id="cocoOff">ปิด</button></div>
+        <div class="sh2">📦 เมนูจำกัดจำนวน (ต้องเปิดขายรายวัน)</div>
+        <div id="stockList"></div>
       </div>
+      <button class="wide" id="menuBtn">🍵 จัดการเมนู (เพิ่ม / แก้ราคา / ซ่อน)</button>
       <button class="wide sum2" id="sumBtn">📊 สรุปการขาย &amp; ปิดยอดวันนี้</button>
     </div>
     <div class="sum"><div><div class="k">ออเดอร์วันนี้</div><div class="v" id="sOrders">0</div></div><div><div class="k">แก้ววันนี้</div><div class="v" id="sCups">0</div></div><div><div class="k">ยอดวันนี้</div><div class="v" id="sTotal">฿0</div></div></div>
@@ -111,6 +123,13 @@ header img{width:44px;image-rendering:pixelated}
   <label class="chk"><input type="checkbox" id="sumRecord" checked> บันทึกยอดขายเป็นรายรับในแอปบัญชี</label>
   <div style="font-size:13px;opacity:.7;margin-top:6px">กดยืนยันแล้ว: ปิดรับออเดอร์วันนี้ + ส่งสรุปเข้า Telegram</div>
   <div class="acts"><button class="x" style="flex:1" id="sumCancel">CANCEL</button><button class="go" style="flex:2" id="sumGo">ยืนยันปิดยอด</button></div>
+</div></div>
+<div class="modal" id="menuM"><div class="box">
+  <div style="font-family:var(--px);font-size:11px;color:var(--yellow);margin-bottom:12px">&gt; menu_editor.json</div>
+  <div id="menuEd"></div>
+  <button class="wide" id="mAdd">+ เพิ่มเมนูใหม่</button>
+  <div class="row2" style="margin-top:14px"><label>นมโอ๊ต บวกเพิ่ม (฿)<input type="number" id="mOat"></label><label>ท็อปปิ้ง ชื่อ<input id="mTopName"></label><label>ท็อปปิ้ง (฿)<input type="number" id="mTop"></label></div>
+  <div class="acts"><button class="x" style="flex:1" id="mCancel">CANCEL</button><button class="go" style="flex:2" id="mSave">SAVE MENU</button></div>
 </div></div>
 <div class="toast" id="toast"></div>
 <script>
@@ -145,7 +164,7 @@ function render(){
   ['new','accepted','ready'].forEach(k=>{const n=orders.filter(o=>o.status===k).length;$('#c-'+k).textContent=n?n:''});
   let a=tab==='all'?orders.slice().reverse():orders.filter(o=>o.status===tab).sort((x,y)=>x.time.localeCompare(y.time));
   $('#list').innerHTML=a.length?a.map(o=>{
-    const items=(o.items||[]).map(x=>'<div class="it"><div><div class="a">'+(x.menu==='Biscoff Milk'?'🍪 ':x.menu==='Matcha Coconut'?'🥥 ':'🍵 ')+esc(x.menu)+'</div><div class="b">'+esc([x.tone?'โทน'+x.tone:'',x.milk||'',x.topping?'+Biscoff':'','หวาน '+x.sweet].filter(Boolean).join(' · '))+'</div></div><div class="q">×'+x.qty+'</div></div>').join('')||'<div class="it"><div class="b">'+esc(o.itemsText)+'</div></div>';
+    const items=(o.items||[]).map(x=>'<div class="it"><div><div class="a">'+(((SHOP&&SHOP.menus||[]).find(m=>m.name===x.menu)||{icon:'🍵'}).icon+' ')+esc(x.menu)+'</div><div class="b">'+esc([x.tone?'โทน'+x.tone:'',x.milk||'',x.topping?'+Biscoff':'','หวาน '+x.sweet].filter(Boolean).join(' · '))+'</div></div><div class="q">×'+x.qty+'</div></div>').join('')||'<div class="it"><div class="b">'+esc(o.itemsText)+'</div></div>';
     const act={new:'<button class="go" data-s="accepted" data-no="'+esc(o.no)+'">✓ รับออเดอร์</button><button class="x" data-s="cancel" data-no="'+esc(o.no)+'">ยกเลิก</button>',
       accepted:'<button class="ok" data-s="ready" data-no="'+esc(o.no)+'">ทำเสร็จแล้ว</button><button class="x" data-s="new" data-no="'+esc(o.no)+'">ย้อน</button>',
       ready:'<button class="ok" data-s="done" data-no="'+esc(o.no)+'">ลูกค้ารับแล้ว</button><button class="x" data-s="accepted" data-no="'+esc(o.no)+'">ย้อน</button>',
@@ -167,15 +186,34 @@ function renderShop(){
   const p=$('#shopPill');p.textContent=SHOP.isOpen?'OPEN':'CLOSED';p.classList.toggle('off',!SHOP.isOpen);
   if(document.activeElement!==$('#tOpen'))$('#tOpen').value=SHOP.open; if(document.activeElement!==$('#tClose'))$('#tClose').value=SHOP.close;
   const t=$('#toggleClose');t.textContent=SHOP.closedToday?'เปิดรับออเดอร์อีกครั้ง':'ปิดรับออเดอร์วันนี้';t.classList.toggle('on',!SHOP.closedToday);
-  const L=SHOP.limited;
-  $('#cocoInfo').textContent=L.on?'· ขายแล้ว '+L.sold+'/'+L.limit+' · เหลือ '+L.left:'· ยังไม่เปิดขาย';
-  if(document.activeElement!==$('#cocoQty'))$('#cocoQty').value=L.on?L.limit:'';
+  const lim=(SHOP.menus||[]).filter(m=>m.limited&&m.active);
+  if(!(document.activeElement&&document.activeElement.tagName==='INPUT'&&$('#stockList').contains(document.activeElement)))
+  $('#stockList').innerHTML=lim.length?lim.map((m,i)=>'<div class="srow2"><div class="n">'+esc(m.icon+' '+m.name)+'<small>'+(m.on?'ขายแล้ว '+m.sold+'/'+m.limit+' · เหลือ '+m.left:'วันนี้ยังไม่เปิดขาย')+'</small></div><input type="number" inputmode="numeric" min="0" data-st="'+esc(m.name)+'" value="'+(m.on?m.limit:'')+'" placeholder="แก้ว"><button class="sbtn" data-son="'+esc(m.name)+'">เปิด</button><button class="sbtn ghost" data-soff="'+esc(m.name)+'">ปิด</button></div>').join(''):'<div class="muted">ไม่มีเมนูจำกัดจำนวน (ตั้งได้ใน จัดการเมนู)</div>';
+  $$('[data-son]').forEach(b=>b.onclick=()=>{const n=b.dataset.son,q=+$('[data-st="'+CSS.escape(n)+'"]').value;if(!(q>0))return toast('ใส่จำนวนแก้วก่อนนะคะ');setShop({stock:{[n]:q}},'เปิดขาย '+n+' '+q+' แก้ว ✓')});
+  $$('[data-soff]').forEach(b=>b.onclick=()=>setShop({stock:{[b.dataset.soff]:0}},'ปิดขาย '+b.dataset.soff+' แล้ว'));
 }
 async function setShop(patch,msg){busy=true;try{SHOP=await api('setShop',{shop:patch});renderShop();toast(msg||'บันทึกแล้ว ✓')}catch(e){toast(e.message)}finally{busy=false}}
 $('#saveTime').onclick=()=>setShop({open:$('#tOpen').value,close:$('#tClose').value},'ตั้งเวลารับออเดอร์แล้ว ✓');
 $('#toggleClose').onclick=()=>{const c=!SHOP.closedToday;if(c&&!confirm('ปิดรับออเดอร์วันนี้?'))return;setShop({closedToday:c},c?'ปิดรับออเดอร์แล้ว':'เปิดรับออเดอร์แล้ว')};
-$('#cocoOn').onclick=()=>{const q=+$('#cocoQty').value;if(!(q>0))return toast('ใส่จำนวนแก้วก่อนนะคะ');setShop({limitedQty:q},'เปิดขาย Matcha Coconut '+q+' แก้ว ✓')};
-$('#cocoOff').onclick=()=>setShop({limitedQty:0},'ปิดขาย Matcha Coconut แล้ว');
+/* ---- menu editor ---- */
+let ED=null;
+$('#menuBtn').onclick=()=>{if(!SHOP)return;ED={oatPrice:SHOP.oatPrice,toppingPrice:SHOP.toppingPrice,toppingName:SHOP.toppingName,items:SHOP.menus.map(m=>({name:m.name,sub:m.sub,icon:m.icon,price:m.price,tone:!!m.tone,milk:!!m.milk,topping:!!m.topping,limited:!!m.limited,active:m.active!==false}))};
+  $('#mOat').value=ED.oatPrice;$('#mTop').value=ED.toppingPrice;$('#mTopName').value=ED.toppingName;renderEd();$('#menuM').style.display='flex'};
+const TG=[['active','เปิดขาย'],['tone','เลือกโทน'],['milk','เลือกนม'],['topping','ท็อปปิ้ง'],['limited','จำกัดจำนวน']];
+function renderEd(){
+  $('#menuEd').innerHTML=ED.items.map((m,i)=>'<div class="mcard'+(m.active?'':' off')+'"><div class="r"><input style="flex:0 0 56px;text-align:center" data-i="'+i+'" data-k="icon" value="'+esc(m.icon)+'"><input data-i="'+i+'" data-k="name" value="'+esc(m.name)+'" placeholder="ชื่อเมนู"><input style="flex:0 0 80px" type="number" data-i="'+i+'" data-k="price" value="'+m.price+'" placeholder="฿"></div>'+
+    '<div class="r"><input data-i="'+i+'" data-k="sub" value="'+esc(m.sub||'')+'" placeholder="คำอธิบายสั้นๆ (ไทย)"></div>'+
+    '<div class="tg">'+TG.map(([k,t])=>'<button class="'+(m[k]?'on':'')+'" data-i="'+i+'" data-t="'+k+'">'+(m[k]?'✓ ':'')+t+'</button>').join('')+'<button class="del" data-del="'+i+'">ลบ</button></div></div>').join('');
+  $$('#menuEd input').forEach(el=>el.oninput=()=>{ED.items[el.dataset.i][el.dataset.k]=el.dataset.k==='price'?+el.value:el.value});
+  $$('#menuEd [data-t]').forEach(b=>b.onclick=()=>{const m=ED.items[b.dataset.i];m[b.dataset.t]=!m[b.dataset.t];renderEd()});
+  $$('#menuEd [data-del]').forEach(b=>b.onclick=()=>{const m=ED.items[b.dataset.del];if(confirm('ลบเมนู '+m.name+' ?')){ED.items.splice(+b.dataset.del,1);renderEd()}});
+}
+$('#mAdd').onclick=()=>{ED.items.push({name:'',sub:'',icon:'🍵',price:80,tone:false,milk:false,topping:false,limited:false,active:true});renderEd();const ins=$$('#menuEd [data-k=name]');ins[ins.length-1].focus()};
+$('#mCancel').onclick=()=>$('#menuM').style.display='none';
+$('#mSave').onclick=async()=>{ED.oatPrice=+$('#mOat').value||0;ED.toppingPrice=+$('#mTop').value||0;ED.toppingName=$('#mTopName').value.trim()||'Biscoff';
+  if(ED.items.some(m=>!String(m.name).trim()))return toast('ใส่ชื่อเมนูให้ครบก่อนนะคะ');
+  const names=ED.items.map(m=>m.name.trim());if(new Set(names).size!==names.length)return toast('มีชื่อเมนูซ้ำกัน');
+  busy=true;$('#mSave').disabled=true;try{SHOP=await api('setMenus',{menus:ED});renderShop();$('#menuM').style.display='none';toast('บันทึกเมนูแล้ว ✓ ลูกค้าเห็นทันที')}catch(e){toast(e.message)}finally{busy=false;$('#mSave').disabled=false}};
 $('#sumBtn').onclick=async()=>{busy=true;try{const r=await api('daySummary',{send:false});
   $('#sumBody').innerHTML='<div style="font-size:15px;opacity:.8;margin-bottom:8px">'+r.date+'</div>'+Object.keys(r.byMenu).map(k=>'<div class="srow"><span>'+esc(k)+' × '+r.byMenu[k].qty+'</span><b>฿'+r.byMenu[k].amount.toLocaleString()+'</b></div>').join('')+
    '<div class="srow" style="font-family:var(--px);font-size:11px;border:none;margin-top:6px"><span>'+r.orders+' ORDERS · '+r.cups+' CUPS</span><span style="color:var(--yellow)">฿'+r.total.toLocaleString()+'</span></div>'+
