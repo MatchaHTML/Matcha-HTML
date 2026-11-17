@@ -80,6 +80,7 @@ header img{width:44px;image-rendering:pixelated}
 .modal .box{background:var(--navy);border-top:4px solid var(--cream);width:100%;max-width:720px;max-height:88vh;overflow:auto;padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
 .chk{display:flex;gap:10px;align-items:center;margin-top:14px;font-size:15px}.chk input{width:22px;height:22px}
 .srow{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px dashed rgba(255,244,220,.3)}
+.ord.focus{outline:4px solid var(--yellow);outline-offset:3px}
 .newflash{animation:fl .6s 3}@keyframes fl{50%{background:var(--orange)}}
 </style>
 </head>
@@ -139,6 +140,7 @@ const LS={get(k,d){try{const v=localStorage.getItem('mha_'+k);return v==null?d:v
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hm=t=>{const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
 const LBL={new:'NEW',accepted:'MAKING',ready:'READY',done:'DONE',cancel:'CANCELLED'};
+let FOCUS=new URLSearchParams(location.search).get('no')||'', focused=false;
 let prevSt={}, user=LS.get('user',''), pin=LS.get('pin',''), tab='new', SHOP=null, orders=[], known=null, busy=false;
 function toast(t){const e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',2500)}
 async function api(action,p={}){const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,user,pass:pin},p))});const j=await r.json();if(!j.ok)throw new Error(j.error);return j.data}
@@ -146,7 +148,7 @@ $('#loginBtn').onclick=async()=>{user=$('#uid').value.trim();pin=$('#pin').value
   try{const r=await api('adminLogin');user=r.user;LS.set('user',user);LS.set('pin',pin);start()}catch(e){toast(e.message)}};
 $('#logout').onclick=()=>{LS.set('user','');LS.set('pin','');location.reload()};
 $('#pin').onkeydown=e=>{if(e.key==='Enter')$('#loginBtn').click()};
-function start(){$('#loginBox').style.display='none';$('#app').style.display='block';$('#who').textContent=user;load();loadShop();setInterval(()=>{if(!busy){load();loadShop()}},10000)}
+function start(){if(FOCUS){tab='all';$$('#tabs button').forEach(x=>x.classList.toggle('on',x.dataset.t==='all'))}$('#loginBox').style.display='none';$('#app').style.display='block';$('#who').textContent=user;load();loadShop();setInterval(()=>{if(!busy){load();loadShop()}},10000)}
 $$('#tabs button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;$$('#tabs button').forEach(x=>x.classList.toggle('on',x===b));render()});
 let ctx;function beep(){try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();[0,.18,.36].forEach(t=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.value=880+t*800;g.gain.value=.08;o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.12)})}catch(e){}if(navigator.vibrate)navigator.vibrate([200,100,200])}
 document.addEventListener('click',()=>{try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}},{once:true});
@@ -172,8 +174,9 @@ function render(){
       accepted:'<button class="ok" data-s="ready" data-no="'+esc(o.no)+'">ทำเสร็จแล้ว</button><button class="x" data-s="new" data-no="'+esc(o.no)+'">ย้อน</button>',
       ready:'<button class="ok" data-s="done" data-no="'+esc(o.no)+'">ลูกค้ารับแล้ว</button><button class="x" data-s="accepted" data-no="'+esc(o.no)+'">ย้อน</button>',
       done:'<button class="x" style="flex:1" data-s="ready" data-no="'+esc(o.no)+'">ย้อนสถานะ</button>',cancel:'<button class="x" style="flex:1" data-s="new" data-no="'+esc(o.no)+'">กู้คืนออเดอร์</button>'}[o.status]||'';
-    return '<div class="ord '+o.status+'"><div class="oh"><div><div class="no">#'+esc(o.no)+'</div><div class="nm">'+esc(o.name)+'</div><span class="badge '+o.status+'">'+(LBL[o.status]||o.status)+'</span>'+(o.by?' <span style="font-size:12px;opacity:.6">· '+esc(o.by)+'</span>':'')+'</div><div class="tm">'+hm(o.time)+'<br>'+o.cups+' แก้ว</div></div>'+items+
+    return '<div class="ord '+o.status+(o.no===FOCUS?' focus':'')+'" id="o-'+esc(o.no)+'"><div class="oh"><div><div class="no">#'+esc(o.no)+'</div><div class="nm">'+esc(o.name)+'</div><span class="badge '+o.status+'">'+(LBL[o.status]||o.status)+'</span>'+(o.by?' <span style="font-size:12px;opacity:.6">· '+esc(o.by)+'</span>':'')+'</div><div class="tm">'+hm(o.time)+'<br>'+o.cups+' แก้ว</div></div>'+items+
       '<div class="tot"><span>TOTAL</span><span style="color:var(--yellow)">฿'+o.total+'</span></div><div class="acts">'+act+'</div></div>'}).join(''):'<div class="empty">ไม่มีออเดอร์</div>';
+  if(FOCUS&&!focused){const el=document.getElementById('o-'+FOCUS);if(el){focused=true;setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),100)}}
   $$('#list [data-s]').forEach(b=>b.onclick=async()=>{
     if(b.dataset.s==='cancel'&&!confirm('ยกเลิกออเดอร์ #'+b.dataset.no+' ?'))return;
     busy=true;b.disabled=true;b.textContent='...';
